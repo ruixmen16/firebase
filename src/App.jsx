@@ -257,7 +257,7 @@ Mientras tanto, puedes enviar solo mensajes de texto.
                   fontSize: '12px'
                 }}
               >
-                🧹 Limpiar Datos del Navegador
+                Limpiar Datos del Navegador
               </button>
             </div>
           </div>
@@ -317,7 +317,7 @@ Mientras tanto, puedes enviar solo mensajes de texto.
 
             {/* Debug info - se puede quitar después */}
             <details style={{ margin: '10px 0', fontSize: '12px', color: '#666' }}>
-              <summary style={{ cursor: 'pointer' }}>🔍 Ver datos de usuario (debug)</summary>
+              <summary style={{ cursor: 'pointer' }}>Ver datos de usuario (debug)</summary>
               <div style={{ marginTop: '5px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '3px' }}>
                 <p><strong>ID:</strong> {user.uid}</p>
                 <p><strong>Nombre:</strong> {user.displayName || 'null/undefined'}</p>
@@ -330,7 +330,7 @@ Mientras tanto, puedes enviar solo mensajes de texto.
             <button onClick={handleSignOut}>Cerrar Sesión</button>
 
             <div style={{ marginTop: '20px' }}>
-              <h3>📝 Escribir nuevo mensaje</h3>
+              <h3>Escribir nuevo mensaje</h3>
 
               {/* Campo de texto */}
               <textarea
@@ -349,7 +349,7 @@ Mientras tanto, puedes enviar solo mensajes de texto.
               {/* Selector de imagen */}
               <div style={{ margin: '15px 0' }}>
                 <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
-                  📸 Agregar imagen (opcional):
+                  Agregar imagen (opcional):
                 </label>
                 <input
                   type="file"
@@ -392,7 +392,7 @@ Mientras tanto, puedes enviar solo mensajes de texto.
                         fontSize: '12px'
                       }}
                     >
-                      ❌ Quitar imagen
+                      Quitar imagen
                     </button>
                   </div>
                 )}
@@ -413,7 +413,7 @@ Mientras tanto, puedes enviar solo mensajes de texto.
                     cursor: uploading ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {uploading ? '⏳ Guardando...' : selectedImage ? '💾 Guardar con Imagen' : '💾 Guardar'}
+                  {uploading ? 'Guardando...' : selectedImage ? 'Guardar con Imagen' : 'Guardar'}
                 </button>
 
                 {/* Botón alternativo para solo texto */}
@@ -453,20 +453,20 @@ Mientras tanto, puedes enviar solo mensajes de texto.
                       cursor: uploading ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    📝 Solo Texto
+                    Solo Texto
                   </button>
                 )}
               </div>
             </div>
 
             <div style={{ marginTop: '30px' }}>
-              <h3>�‍👩‍👧‍👦 Chat Familiar - Todos los mensajes ({messages.length})</h3>
+              <h3>Chat Familiar - Todos los mensajes ({messages.length})</h3>
               {loading ? (
-                <p>⏳ Cargando mensajes...</p>
+                <p>Cargando mensajes...</p>
               ) : messages.length === 0 ? (
                 <div>
-                  <p>❌ No se encontraron mensajes.</p>
-                  <p>🔍 Revisa la consola del navegador (F12) para ver los logs de Firebase.</p>
+                  <p>No se encontraron mensajes.</p>
+                  <p>Revisa la consola del navegador (F12) para ver los logs de Firebase.</p>
                 </div>
               ) : (
                 <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px' }}>
@@ -525,7 +525,7 @@ Mientras tanto, puedes enviar solo mensajes de texto.
                             {/* Información del autor */}
                             <div>
                               <strong style={{ color: isMyMessage ? '#007bff' : '#333', fontSize: '14px' }}>
-                                {isMyMessage ? '🙋‍♂️ Tú' : ''} {
+                                {isMyMessage ? 'Tú' : ''} {
                                   msg.userName ||
                                   (msg.userEmail ? msg.userEmail.split('@')[0] : 'Usuario desconocido')
                                 }
@@ -536,14 +536,14 @@ Mientras tanto, puedes enviar solo mensajes de texto.
                                 {msg.userEmail || 'Email no disponible'}
                                 {(!msg.userName || !msg.userEmail) &&
                                   <span style={{ color: '#dc3545', marginLeft: '5px' }}>
-                                    ⚠️ (Datos incompletos)
+                                    (Datos incompletos)
                                   </span>
                                 }
                               </small>
                             </div>
                           </div>
                           <small style={{ color: '#666', fontSize: '12px' }}>
-                            🕒 {msg.timestamp?.toDate?.() ?
+                            {msg.timestamp?.toDate?.() ?
                               msg.timestamp.toDate().toLocaleString('es-ES', {
                                 year: 'numeric',
                                 month: 'short',
@@ -590,7 +590,7 @@ Mientras tanto, puedes enviar solo mensajes de texto.
                               color: '#888',
                               fontStyle: 'italic'
                             }}>
-                              📷 Haz clic para ver en tamaño completo
+                              Haz clic para ver en tamaño completo
                             </p>
                           </div>
                         )}
