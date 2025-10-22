@@ -12,9 +12,9 @@ export const useDashboard = (user) => {
 
     // Candidatos definidos (igual que en Android)
     const candidatos = [
-        { id: 1, nombre: "Uno" },
-        { id: 2, nombre: "Dos" },
-        { id: 3, nombre: "Tres" }
+        { id: 1, nombre: "Pincay" },
+        { id: 2, nombre: "Dennys Guillen" },
+        { id: 3, nombre: "Rafael" }
     ];
 
     // Cargar los últimos 10 votos
