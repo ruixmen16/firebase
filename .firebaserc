@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "prueba-conteo-votos"
+  },
+  "targets": {
+    "prueba-conteo-votos": {
+      "hosting": {
+        "casa2": [
+          "prueba-conteo-votos"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
