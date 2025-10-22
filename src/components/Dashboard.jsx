@@ -12,9 +12,14 @@ const Dashboard = ({ user }) => {
         showImageModal,
         selectedImageIndex,
         setSelectedImageIndex,
+        showVotosModal,
+        selectedVotoDetalle,
+        calcularTotalVotos,
         getEstadisticasPorCandidato,
         abrirModalImagenes,
+        abrirModalVotos,
         cerrarModal,
+        cerrarModalVotos,
         siguienteImagen,
         imagenAnterior,
         abrirImagenEnNuevaVentana
@@ -50,9 +55,18 @@ const Dashboard = ({ user }) => {
                             <h3 className="mb-0">📊 Dashboard Electoral - Resultados</h3>
                         </Card.Header>
                         <Card.Body>
-                            <Alert variant="info">
-                                <strong>Total de votos registrados:</strong> {totalVotosGeneral} votos
-                            </Alert>
+                            <Row>
+                                <Col md={6}>
+                                    <Alert variant="info" className="mb-0">
+                                        <strong>Total de votos:</strong> {totalVotosGeneral} votos
+                                    </Alert>
+                                </Col>
+                                <Col md={6}>
+                                    <Alert variant="success" className="mb-0">
+                                        <strong>Actas registradas:</strong> {votos.length} actas
+                                    </Alert>
+                                </Col>
+                            </Row>
                         </Card.Body>
                     </Card>
                 </Col>
@@ -74,10 +88,6 @@ const Dashboard = ({ user }) => {
                                     <div className="mb-3">
                                         <h2 className="text-primary">{candidato.totalVotos}</h2>
                                         <small className="text-muted">votos totales</small>
-                                    </div>
-                                    <div className="mb-3">
-                                        <h4 className="text-success">{candidato.totalActas}</h4>
-                                        <small className="text-muted">actas registradas</small>
                                     </div>
                                     <Badge variant="secondary" className="fs-6">
                                         {porcentaje}% del total
@@ -106,48 +116,50 @@ const Dashboard = ({ user }) => {
                                     <thead className="table-dark">
                                         <tr>
                                             <th>Fecha y Hora</th>
-                                            <th>Candidato</th>
                                             <th>Mesa</th>
-                                            <th>Cantidad Votos</th>
-                                            <th>Fotos</th>
-                                            <th>Acciones</th>
+                                            <th style={{ cursor: 'pointer' }}>Total Votos</th>
+                                            <th style={{ cursor: 'pointer' }}>Fotos</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {votos.map((voto) => (
-                                            <tr key={voto.id}>
-                                                <td>{formatearFecha(voto.timestamp)}</td>
-                                                <td>
-                                                    <Badge variant="primary">
-                                                        {voto.candidatoNombre}
-                                                    </Badge>
-                                                </td>
-                                                <td>Mesa {voto.numeroMesa}</td>
-                                                <td>
-                                                    <strong>{voto.numeroVotos}</strong> votos
-                                                </td>
-                                                <td>
-                                                    {voto.imageUrls && voto.imageUrls.length > 0 ? (
-                                                        <Badge variant="success">
-                                                            {voto.imageUrls.length} foto{voto.imageUrls.length > 1 ? 's' : ''}
+                                        {votos.map((voto) => {
+                                            const totalVotos = calcularTotalVotos(voto);
+                                            return (
+                                                <tr key={voto.id}>
+                                                    <td>{formatearFecha(voto.timestamp)}</td>
+                                                    <td>
+                                                        <Badge variant="info">
+                                                            Mesa {voto.numeroMesa}
                                                         </Badge>
-                                                    ) : (
-                                                        <Badge variant="secondary">Sin fotos</Badge>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    {voto.imageUrls && voto.imageUrls.length > 0 && (
+                                                    </td>
+                                                    <td>
                                                         <Button
-                                                            variant="outline-primary"
-                                                            size="sm"
-                                                            onClick={() => abrirModalImagenes(voto)}
+                                                            variant="link"
+                                                            className="p-0 fw-bold text-primary"
+                                                            onClick={() => abrirModalVotos(voto)}
+                                                            style={{
+                                                                textDecoration: 'none',
+                                                                fontSize: '16px'
+                                                            }}
                                                         >
-                                                            Ver Fotos
+                                                            {totalVotos} votos
                                                         </Button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    </td>
+                                                    <td
+                                                        style={{ cursor: voto.imageUrls && voto.imageUrls.length > 0 ? 'pointer' : 'default' }}
+                                                        onClick={() => voto.imageUrls && voto.imageUrls.length > 0 && abrirModalImagenes(voto)}
+                                                    >
+                                                        {voto.imageUrls && voto.imageUrls.length > 0 ? (
+                                                            <Badge variant="success" className="user-select-none">
+                                                                {voto.imageUrls.length} foto{voto.imageUrls.length > 1 ? 's' : ''}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="secondary" className="user-select-none">Sin fotos</Badge>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </Table>
                             )}
@@ -155,6 +167,68 @@ const Dashboard = ({ user }) => {
                     </Card>
                 </Col>
             </Row>
+
+            {/* Modal de Detalle de Votos por Candidato */}
+            <Modal
+                show={showVotosModal}
+                onHide={cerrarModalVotos}
+                size="md"
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        📊 Detalle de Votos - Mesa {selectedVotoDetalle?.numeroMesa}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedVotoDetalle && selectedVotoDetalle.votos && (
+                        <div>
+                            <div className="mb-3">
+                                <small className="text-muted">
+                                    Registrado el: {formatearFecha(selectedVotoDetalle.timestamp)}
+                                </small>
+                            </div>
+                            <Table striped bordered responsive>
+                                <thead className="table-primary">
+                                    <tr>
+                                        <th>Candidato</th>
+                                        <th className="text-center">Votos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {selectedVotoDetalle.votos.map((candidatoVoto, index) => (
+                                        <tr key={index}>
+                                            <td>
+                                                <strong>{candidatoVoto.candidatoNombre || 'Candidato no encontrado'}</strong>
+                                            </td>
+                                            <td className="text-center">
+                                                <Badge variant="primary" className="fs-6 px-3 py-2">
+                                                    {candidatoVoto.numeroVotos}
+                                                </Badge>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot className="table-success">
+                                    <tr>
+                                        <th>Total de Votos</th>
+                                        <th className="text-center">
+                                            <Badge variant="success" className="fs-6 px-3 py-2">
+                                                {calcularTotalVotos(selectedVotoDetalle)}
+                                            </Badge>
+                                        </th>
+                                    </tr>
+                                </tfoot>
+                            </Table>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={cerrarModalVotos}>
+                        Cerrar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             {/* Modal de Imágenes */}
             <Modal
@@ -165,7 +239,7 @@ const Dashboard = ({ user }) => {
             >
                 <Modal.Header closeButton>
                     <Modal.Title>
-                        Fotos - {selectedVoto?.candidatoNombre} - Mesa {selectedVoto?.numeroMesa}
+                        📸 Fotos - Mesa {selectedVoto?.numeroMesa}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
