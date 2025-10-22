@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth'; // Importamos la autenticación
 import { getFirestore } from 'firebase/firestore'; // Importamos Cloud Firestore
+import { getStorage } from 'firebase/storage'; // Importamos Firebase Storage
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -23,5 +24,6 @@ const app = initializeApp(firebaseConfig);
 // Exportar los servicios que usaremos
 export const auth = getAuth(app); // Para la autenticación
 export const db = getFirestore(app); // Para Cloud Firestore
+export const storage = getStorage(app); // Para Firebase Storage
 
-// Ahora puedes importar 'auth' y 'db' en cualquier componente
+// Ahora puedes importar 'auth', 'db' y 'storage' en cualquier componente
