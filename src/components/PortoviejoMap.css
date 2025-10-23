@@ -37,11 +37,14 @@
     justify-content: center;
     align-items: center;
     position: relative;
-    padding: 20px;
+    padding: 40px 20px 20px 20px;
+    /* Más espacio arriba para el tooltip */
     background: rgba(255, 255, 255, 0.9);
     border-radius: 10px;
     margin-bottom: 20px;
     min-height: 300px;
+    overflow: visible;
+    /* Asegurar que el tooltip sea visible */
 }
 
 .portoviejo-svg {
@@ -49,7 +52,13 @@
     /* height: auto; */
     filter: drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.1));
 
-    width: 100%;
+    max-width: 600px;
+    /* Limita el tamaño que el SVG puede ocupar en la pantalla */
+    width: 90%;
+    /* Hace que sea responsive */
+    /* Por ejemplo, máximo 600px de ancho */
+
+    /* Ocupa el 80% del contenedor */
     height: auto;
     display: block;
 }
@@ -63,13 +72,15 @@
     stroke: #007bff;
     stroke-width: 3;
     filter: brightness(1.1);
-    transform: scale(1.02);
-    transform-origin: center;
+    /* Removemos el transform que puede interferir con el posicionamiento */
 }
 
 .map-tooltip {
     pointer-events: none;
-    z-index: 1000;
+    z-index: 9999;
+    position: absolute;
+    white-space: nowrap;
+    /* Evitar que el texto se corte */
 }
 
 .tooltip-content {
@@ -79,10 +90,11 @@
     border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
     position: relative;
+    min-width: fit-content;
 }
 
 .tooltip-content::before {
