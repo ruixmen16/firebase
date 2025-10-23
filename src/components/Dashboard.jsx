@@ -73,38 +73,89 @@ const Dashboard = ({ user }) => {
                 </Col>
             </Row>
 
-            {/* Mapa Interactivo de Portoviejo */}
+            {/* Layout Principal: Mapa + Estadísticas */}
             <Row className="mb-4">
-                <Col>
+                {/* Mapa Interactivo de Portoviejo - 70% del ancho */}
+                <Col lg={8} className="mb-4">
                     <PortoviejoMap />
                 </Col>
-            </Row>
 
-            {/* Estadísticas por Candidato */}
-            <Row className="mb-4">
-                {estadisticas.map((candidato) => {
-                    const porcentaje = totalVotosGeneral > 0 ?
-                        Math.round((candidato.totalVotos / totalVotosGeneral) * 100) : 0;
+                {/* Estadísticas por Candidato - 30% del ancho */}
+                <Col lg={4}>
+                    <Card className="shadow-sm h-100">
+                        <Card.Header className="bg-primary text-white text-center">
+                            <h5 className="mb-0">🏛️ Candidatos a Alcalde</h5>
+                        </Card.Header>
+                        <Card.Body className="p-3" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                            {estadisticas
+                                .filter(candidato => candidato.totalVotos > 0) // Mostrar solo candidatos con votos
+                                .sort((a, b) => b.totalVotos - a.totalVotos) // Ordenar de mayor a menor por votos
+                                .map((candidato, index) => {
+                                    const porcentaje = totalVotosGeneral > 0 ?
+                                        Math.round((candidato.totalVotos / totalVotosGeneral) * 100) : 0;
 
-                    return (
-                        <Col md={4} key={candidato.id} className="mb-3">
-                            <Card className="h-100 shadow-sm">
-                                <Card.Header className="bg-primary text-white text-center">
-                                    <h5 className="mb-0">{candidato.nombre}</h5>
-                                </Card.Header>
-                                <Card.Body className="text-center">
-                                    <div className="mb-3">
-                                        <h2 className="text-primary">{candidato.totalVotos}</h2>
-                                        <small className="text-muted">votos totales</small>
+                                    // Colores para las barras de progreso - el primer lugar tendrá color dorado/success
+                                    const colores = ['success', 'primary', 'info', 'warning', 'danger', 'secondary', 'dark', 'primary'];
+                                    const color = colores[index % colores.length];
+
+                                    // Indicadores de posición
+                                    const posicionIcon = index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}°`;
+                                    const esLider = index === 0;
+
+                                    return (
+                                        <div key={candidato.id} className={`mb-3 p-2 border rounded ${esLider ? 'bg-warning bg-opacity-25 border-warning' : 'bg-light'}`}>
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <div className="d-flex align-items-center">
+                                                    <span className="me-2" style={{ fontSize: '16px' }}>{posicionIcon}</span>
+                                                    <h6 className={`mb-0 ${esLider ? 'text-warning-emphasis fw-bold' : 'text-dark fw-bold'}`}>
+                                                        {candidato.nombre}
+                                                    </h6>
+                                                </div>
+                                                <div className="text-end">
+                                                    <Badge bg={color} className="me-1">{candidato.totalVotos}</Badge>
+                                                    <Badge bg="outline-secondary" text="dark">{porcentaje}%</Badge>
+                                                </div>
+                                            </div>
+                                            <div className="progress" style={{ height: '8px' }}>
+                                                <div
+                                                    className={`progress-bar bg-${color}`}
+                                                    role="progressbar"
+                                                    style={{ width: `${porcentaje}%` }}
+                                                    aria-valuenow={porcentaje}
+                                                    aria-valuemin="0"
+                                                    aria-valuemax="100"
+                                                ></div>
+                                            </div>
+                                            <small className="text-muted">
+                                                {candidato.totalActas} acta{candidato.totalActas !== 1 ? 's' : ''} registrada{candidato.totalActas !== 1 ? 's' : ''}
+                                            </small>
+                                        </div>
+                                    );
+                                })}
+
+                            {/* Mensaje cuando no hay candidatos con votos */}
+                            {estadisticas.filter(candidato => candidato.totalVotos > 0).length === 0 && (
+                                <div className="text-center py-4">
+                                    <div className="text-muted">
+                                        <h6>📊 Sin resultados aún</h6>
+                                        <p className="mb-0">Los candidatos aparecerán aquí cuando reciban votos</p>
                                     </div>
-                                    <Badge variant="secondary" className="fs-6">
-                                        {porcentaje}% del total
-                                    </Badge>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    );
-                })}
+                                </div>
+                            )}
+
+                            {/* Resumen total */}
+                            <div className="mt-3 pt-3 border-top">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <strong className="text-dark">Total General:</strong>
+                                    <div>
+                                        <Badge bg="success" className="me-1">{totalVotosGeneral}</Badge>
+                                        <Badge bg="info">{votos.length} actas</Badge>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card.Body>
+                    </Card>
+                </Col>
             </Row>
 
             {/* Lista de Últimos 10 Votos */}

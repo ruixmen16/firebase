@@ -17,9 +17,11 @@ export const useAuth = () => {
     }, []);
 
     const signInWithGoogle = async () => {
+        console.log("Intentando iniciar sesión con Google...");
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(auth, provider);
+            console.log("Login exitoso:", result.user);
         } catch (error) {
             console.error("Error al iniciar sesión con Google: ", error);
 

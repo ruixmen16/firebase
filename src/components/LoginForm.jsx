@@ -3,6 +3,8 @@ import React from 'react';
 import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
 
 const LoginForm = ({ signInWithGoogle, clearBrowserData }) => {
+    console.log("LoginForm recibió signInWithGoogle:", typeof signInWithGoogle);
+
     return (
         <Container fluid className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
             <Row className="w-100 justify-content-center">

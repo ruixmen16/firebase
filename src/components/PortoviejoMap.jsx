@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tooltip } from 'react-tooltip';
+import Select from 'react-select';
+import { db } from '../firebase-config';
+import { collection, getDocs } from 'firebase/firestore';
 import './PortoviejoMap.css';
 
 const PortoviejoMap = () => {
     const [hoveredParish, setHoveredParish] = useState(null);
+    const [parroquias, setParroquias] = useState([]);
+    const [selectedCircunscripcion, setSelectedCircunscripcion] = useState(null);
+    const [selectedParroquia, setSelectedParroquia] = useState(null);
+    const [activePaths, setActivePaths] = useState([]);
 
     // Mapeo de IDs a nombres de parroquias
     const parishNames = {
@@ -28,6 +35,102 @@ const PortoviejoMap = () => {
 
     };
 
+    // Cargar parroquias desde Firebase
+    useEffect(() => {
+        const loadParroquias = async () => {
+            try {
+                const parroquiasCollection = collection(db, 'parroquias');
+                const snapshot = await getDocs(parroquiasCollection);
+                const parroquiasData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setParroquias(parroquiasData);
+            } catch (error) {
+                console.error('Error cargando parroquias:', error);
+            }
+        };
+        loadParroquias();
+    }, []);
+
+    // Obtener opciones únicas de circunscripción
+    const getCircunscripcionOptions = () => {
+        const circunscripciones = [...new Set(parroquias.map(p => p.circunscripcion))];
+        const options = circunscripciones.map(circ => {
+            const codigo = parroquias.find(p => p.circunscripcion === circ)?.intCircunscripcionCodigo;
+            return {
+                label: circ,
+                value: codigo
+            };
+        });
+        return [
+            { label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' },
+            ...options
+        ];
+    };
+
+    // Obtener opciones de parroquias filtradas por circunscripción
+    const getParroquiaOptions = () => {
+        let filteredParroquias = parroquias;
+
+        if (selectedCircunscripcion && selectedCircunscripcion.value !== 'all') {
+            filteredParroquias = parroquias.filter(p =>
+                p.intCircunscripcionCodigo === selectedCircunscripcion.value
+            );
+        }
+
+        const options = filteredParroquias.map(p => ({
+            label: p.strNombre,
+            value: p.id_svg || p.strNombre,
+            data: p
+        }));
+
+        return [
+            {
+                label: selectedCircunscripcion && selectedCircunscripcion.value !== 'all'
+                    ? 'TODAS LAS PARROQUIAS (DE ESTA CIRCUNSCRIPCIÓN)'
+                    : 'TODAS LAS PARROQUIAS',
+                value: 'all'
+            },
+            ...options
+        ];
+    };
+
+    // Manejar cambio de circunscripción
+    const handleCircunscripcionChange = (selectedOption) => {
+        setSelectedCircunscripcion(selectedOption);
+        setSelectedParroquia(null); // Reset parroquia selection
+        updateActivePaths(selectedOption, null);
+    };
+
+    // Manejar cambio de parroquia
+    const handleParroquiaChange = (selectedOption) => {
+        setSelectedParroquia(selectedOption);
+        updateActivePaths(selectedCircunscripcion, selectedOption);
+    };
+
+    // Actualizar paths activos basado en selecciones
+    const updateActivePaths = (circunscripcion, parroquia) => {
+        if (!parroquia || parroquia.value === 'all') {
+            // Mostrar todas las parroquias de la circunscripción seleccionada
+            if (!circunscripcion || circunscripcion.value === 'all') {
+                // Todas las parroquias
+                const allPaths = parroquias.map(p => p.id_svg).filter(Boolean);
+                setActivePaths(allPaths);
+            } else {
+                // Todas las parroquias de la circunscripción seleccionada
+                const filteredPaths = parroquias
+                    .filter(p => p.intCircunscripcionCodigo === circunscripcion.value)
+                    .map(p => p.id_svg)
+                    .filter(Boolean);
+                setActivePaths(filteredPaths);
+            }
+        } else {
+            // Mostrar solo la parroquia seleccionada
+            setActivePaths([parroquia.value]);
+        }
+    };
+
     const handleMouseEnter = (parishId) => {
         setHoveredParish(parishId);
     };
@@ -41,8 +144,17 @@ const PortoviejoMap = () => {
         alert(`Has seleccionado: ${parishName}`);
     };
 
+    // Helper function para determinar el color de fill de un path
+    const getPathFill = (pathId) => {
+        return activePaths.includes(pathId) || hoveredParish === pathId
+            ? '#007bff'
+            : '#a6c1ff';
+    };
+
     return (
         <div className="portoviejo-map-container">
+            {/*
+           
             <div className="map-header">
                 <h4 className="map-title">
                     <i className="fas fa-map-marker-alt me-2"></i>
@@ -51,6 +163,81 @@ const PortoviejoMap = () => {
                 <p className="map-description">
                     Pasa el mouse sobre las parroquias para ver información detallada
                 </p>
+            </div>
+            */}
+            {/* Controles de selección */}
+            <div className="selection-controls" style={{
+                display: 'flex',
+                gap: '20px',
+                marginBottom: '20px',
+                flexWrap: 'wrap'
+            }}>
+                <div style={{ flex: 1, minWidth: '250px' }}>
+                    <label style={{
+                        display: 'block',
+                        marginBottom: '8px',
+                        fontWeight: 'bold',
+                        color: '#495057'
+                    }}>
+                        CIRCUNSCRIPCIÓN:
+                    </label>
+                    <Select
+                        value={selectedCircunscripcion}
+                        onChange={handleCircunscripcionChange}
+                        options={getCircunscripcionOptions()}
+                        placeholder="Seleccionar circunscripción..."
+                        isSearchable={false}
+                        styles={{
+                            control: (base) => ({
+                                ...base,
+                                borderColor: '#007bff',
+                                boxShadow: 'none',
+                                '&:hover': {
+                                    borderColor: '#0056b3'
+                                }
+                            }),
+                            option: (base, state) => ({
+                                ...base,
+                                backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#e3f2fd' : 'white',
+                                color: state.isSelected ? 'white' : '#495057'
+                            })
+                        }}
+                    />
+                </div>
+
+                <div style={{ flex: 1, minWidth: '250px' }}>
+                    <label style={{
+                        display: 'block',
+                        marginBottom: '8px',
+                        fontWeight: 'bold',
+                        color: '#495057'
+                    }}>
+                        PARROQUIA:
+                    </label>
+                    <Select
+                        value={selectedParroquia}
+                        onChange={handleParroquiaChange}
+                        options={getParroquiaOptions()}
+                        placeholder="Seleccionar parroquia..."
+                        isSearchable={true}
+                        isDisabled={!selectedCircunscripcion}
+                        styles={{
+                            control: (base) => ({
+                                ...base,
+                                borderColor: '#007bff',
+                                boxShadow: 'none',
+                                '&:hover': {
+                                    borderColor: '#0056b3'
+                                }
+                            }),
+                            option: (base, state) => ({
+                                ...base,
+                                backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#e3f2fd' : 'white',
+                                color: state.isSelected ? 'white' : '#495057'
+                            })
+                        }}
+                    />
+                </div>
             </div>
 
             <div className="map-wrapper">
@@ -66,8 +253,7 @@ const PortoviejoMap = () => {
                         strokeLinejoin="round"
                         strokeOpacity={1}
                         id="jqvmap12_10"
-                        fill={hoveredParish === 'jqvmap12_10' ? '#007bff' : '#a6c1ff'}
-
+                        fill={getPathFill('jqvmap12_10')}
                         className="parish-path"
                         data-tooltip-id="parish-tooltip"
                         data-tooltip-content={parishNames['jqvmap12_10'] || 'jqvmap12_10'}
@@ -84,7 +270,7 @@ const PortoviejoMap = () => {
                         strokeLinejoin="round"
                         strokeOpacity={1}
                         id="jqvmap12_50"
-                        fill={hoveredParish === 'jqvmap12_50' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_50')}
 
                         className="parish-path"
                         data-tooltip-id="parish-tooltip"
@@ -101,7 +287,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_770' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_770')}
 
                         id="jqvmap12_770"
                         className="parish-path"
@@ -119,7 +305,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_1925' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_1925')}
 
                         id="jqvmap12_1925"
                         className="parish-path"
@@ -137,7 +323,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_2970' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_2970')}
 
                         id="jqvmap12_2970"
 
@@ -158,7 +344,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_3185' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_3185')}
 
                         id="jqvmap12_3185"
                         className="parish-path"
@@ -177,7 +363,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_3625' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_3625')}
 
                         id="jqvmap12_3625"
                         className="parish-path"
@@ -195,7 +381,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_5030' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_5030')}
                         original="#a6c1ff"
                         id="jqvmap12_5030"
                         className="parish-path"
@@ -215,7 +401,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_5265' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_5265')}
 
                         id="jqvmap12_5265"
                         className="parish-path"
@@ -234,7 +420,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_5280' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_5280')}
 
                         id="jqvmap12_5280"
                         className="parish-path"
@@ -253,7 +439,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_5795' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_5795')}
                         data-tooltip-id="parish-tooltip"
                         data-tooltip-content={parishNames['jqvmap12_5795'] || 'jqvmap12_5795'}
                         id="jqvmap12_5795"
@@ -270,7 +456,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_5845' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_5845')}
                         data-tooltip-id="parish-tooltip"
                         data-tooltip-content={parishNames['jqvmap12_5845'] || 'jqvmap12_5845'}
                         id="jqvmap12_5845"
@@ -287,7 +473,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_6585' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_6585')}
                         id="jqvmap12_6585"
                         className="parish-path"
                         onMouseEnter={() => handleMouseEnter('jqvmap12_6585')}
@@ -304,7 +490,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_6770' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_6770')}
                         data-tooltip-id="parish-tooltip"
                         data-tooltip-content={parishNames['jqvmap12_6770'] || 'jqvmap12_6770'}
                         id="jqvmap12_6770"
@@ -321,7 +507,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_6775' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_6775')}
                         data-tooltip-id="parish-tooltip"
                         data-tooltip-content={parishNames['jqvmap12_6775'] || 'jqvmap12_6775'}
                         id="jqvmap12_6775"
@@ -338,7 +524,7 @@ const PortoviejoMap = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeOpacity={1}
-                        fill={hoveredParish === 'jqvmap12_6910' ? '#007bff' : '#a6c1ff'}
+                        fill={getPathFill('jqvmap12_6910')}
                         id="jqvmap12_6910"
                         className="parish-path"
                         onMouseEnter={() => handleMouseEnter('jqvmap12_6910')}

@@ -14,7 +14,12 @@ export const useDashboard = (user) => {
     const candidatos = [
         { id: 1, nombre: "Pincay" },
         { id: 2, nombre: "Dennys Guillen" },
-        { id: 3, nombre: "Rafael" }
+        { id: 3, nombre: "Rafael" },
+        { id: 4, nombre: "María González" },
+        { id: 5, nombre: "Carlos Mendoza" },
+        { id: 6, nombre: "Ana Rodríguez" },
+        { id: 7, nombre: "Luis Morales" },
+        { id: 8, nombre: "Patricia Vega" }
     ];
 
     // Estado para el modal de detalle de votos
