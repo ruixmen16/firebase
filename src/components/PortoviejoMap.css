@@ -45,9 +45,13 @@
 }
 
 .portoviejo-svg {
-    max-width: 100%;
-    height: auto;
+    /* max-width: 100%; */
+    /* height: auto; */
     filter: drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.1));
+
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 .parish-path {
