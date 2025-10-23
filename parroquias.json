@@ -1,0 +1,98 @@
+[
+    {
+        "intCodigo": 5280,
+        "strNombre": "12 DE MARZO",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 6770,
+        "strNombre": "18 DE OCTUBRE",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 10,
+        "strNombre": "ABDON CALDERON",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 50,
+        "strNombre": "ALHAJUELA /BAJO GRANDE",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 5030,
+        "strNombre": "ANDRES DE VERA",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 1925,
+        "strNombre": "CHIRIJOS",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 5265,
+        "strNombre": "COLON",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 770,
+        "strNombre": "CRUCITA",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 6775,
+        "strNombre": "FRANCISCO PACHECO",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 5845,
+        "strNombre": "PICOAZA",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 5795,
+        "strNombre": "PORTOVIEJO",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 2970,
+        "strNombre": "PUEBLO NUEVO",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 3185,
+        "strNombre": "RIO CHICO",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 6585,
+        "strNombre": "SAN PABLO",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 3625,
+        "strNombre": "SAN PLACIDO",
+        "intAux": 440,
+        "strAux": null
+    },
+    {
+        "intCodigo": 6910,
+        "strNombre": "SIMON BOLIVAR",
+        "intAux": 440,
+        "strAux": null
+    }
+]

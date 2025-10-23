@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Row, Col, Card, Button, Badge, Alert, Table, Modal } from 'react-bootstrap';
 import { useDashboard } from '../hooks/useDashboard';
 import LoadingSpinner from './LoadingSpinner';
+import PortoviejoMap from './PortoviejoMap';
 
 const Dashboard = ({ user }) => {
     const {
@@ -55,6 +56,13 @@ const Dashboard = ({ user }) => {
                             </Alert>
                         </Card.Body>
                     </Card>
+                </Col>
+            </Row>
+
+            {/* Mapa Interactivo de Portoviejo */}
+            <Row className="mb-4">
+                <Col>
+                    <PortoviejoMap />
                 </Col>
             </Row>
 
