@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { Tooltip } from 'react-tooltip';
 import './PortoviejoMap.css';
 
 const PortoviejoMap = () => {
     const [hoveredParish, setHoveredParish] = useState(null);
-    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
 
     // Mapeo de IDs a nombres de parroquias
     const parishNames = {
@@ -28,37 +28,12 @@ const PortoviejoMap = () => {
 
     };
 
-    const handleMouseEnter = (event, parishId) => {
+    const handleMouseEnter = (parishId) => {
         setHoveredParish(parishId);
-        const parishName = parishNames[parishId] || parishId;
-
-        // Obtener las coordenadas relativas al contenedor
-        const rect = event.currentTarget.closest('.map-wrapper').getBoundingClientRect();
-
-        setTooltip({
-            visible: true,
-            x: event.clientX - 50000,
-            y: event.clientY - rect.top - 1000,
-            content: parishName + ' (x: ' + (event.clientX - rect.left) + ', y: ' + (event.clientY - rect.top) + ')'
-        });
     };
 
     const handleMouseLeave = () => {
         setHoveredParish(null);
-        setTooltip({ visible: false, x: 0, y: 0, content: '' });
-    };
-
-    const handleMouseMove = (event) => {
-        if (tooltip.visible) {
-            // Obtener coordenadas relativas al contenedor
-            const rect = event.currentTarget.getBoundingClientRect();
-
-            setTooltip(prev => ({
-                ...prev,
-                x: event.clientX - rect.left + 15,
-                y: event.clientY - rect.top - 35
-            }));
-        }
     };
 
     const handleParishClick = (parishId) => {
@@ -78,7 +53,7 @@ const PortoviejoMap = () => {
                 </p>
             </div>
 
-            <div className="map-wrapper" onMouseMove={handleMouseMove}>
+            <div className="map-wrapper">
                 <svg viewBox="0 0 900 650"
                     width="auto"
                     height="auto" className="portoviejo-svg">
@@ -94,7 +69,9 @@ const PortoviejoMap = () => {
                         fill={hoveredParish === 'jqvmap12_10' ? '#007bff' : '#a6c1ff'}
 
                         className="parish-path"
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_10')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_10'] || 'jqvmap12_10'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_10')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_10')}
                         style={{ cursor: 'pointer' }}
@@ -110,7 +87,9 @@ const PortoviejoMap = () => {
                         fill={hoveredParish === 'jqvmap12_50' ? '#007bff' : '#a6c1ff'}
 
                         className="parish-path"
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_50')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_50'] || 'jqvmap12_50'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_50')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_50')}
                         style={{ cursor: 'pointer' }}
@@ -126,8 +105,9 @@ const PortoviejoMap = () => {
 
                         id="jqvmap12_770"
                         className="parish-path"
-
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_770')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_770'] || 'jqvmap12_770'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_770')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_770')}
                         style={{ cursor: 'pointer' }}
@@ -143,8 +123,9 @@ const PortoviejoMap = () => {
 
                         id="jqvmap12_1925"
                         className="parish-path"
-
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_1925')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_1925'] || 'jqvmap12_1925'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_1925')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_1925')}
                         style={{ cursor: 'pointer' }}
@@ -163,7 +144,9 @@ const PortoviejoMap = () => {
                         fillOpacity={1}
                         className="parish-path"
 
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_2970')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_2970'] || 'jqvmap12_2970'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_2970')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_2970')}
                         style={{ cursor: 'pointer' }}
@@ -179,8 +162,9 @@ const PortoviejoMap = () => {
 
                         id="jqvmap12_3185"
                         className="parish-path"
-
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_3185')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_3185'] || 'jqvmap12_3185'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_3185')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_3185')}
                         style={{ cursor: 'pointer' }}
@@ -197,8 +181,9 @@ const PortoviejoMap = () => {
 
                         id="jqvmap12_3625"
                         className="parish-path"
-
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_3625')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_3625'] || 'jqvmap12_3625'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_3625')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_3625')}
                         style={{ cursor: 'pointer' }}
@@ -214,8 +199,9 @@ const PortoviejoMap = () => {
                         original="#a6c1ff"
                         id="jqvmap12_5030"
                         className="parish-path"
-
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_5030')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_5030'] || 'jqvmap12_5030'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_5030')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_5030')}
                         style={{ cursor: 'pointer' }}
@@ -233,8 +219,9 @@ const PortoviejoMap = () => {
 
                         id="jqvmap12_5265"
                         className="parish-path"
-
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_5265')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_5265'] || 'jqvmap12_5265'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_5265')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_5265')}
                         style={{ cursor: 'pointer' }}
@@ -251,8 +238,9 @@ const PortoviejoMap = () => {
 
                         id="jqvmap12_5280"
                         className="parish-path"
-
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_5280')}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_5280'] || 'jqvmap12_5280'}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_5280')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_5280')}
                         style={{ cursor: 'pointer' }}
@@ -266,10 +254,11 @@ const PortoviejoMap = () => {
                         strokeLinejoin="round"
                         strokeOpacity={1}
                         fill={hoveredParish === 'jqvmap12_5795' ? '#007bff' : '#a6c1ff'}
-
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_5795'] || 'jqvmap12_5795'}
                         id="jqvmap12_5795"
                         className="parish-path"
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_5795')}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_5795')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_5795')}
                         style={{ cursor: 'pointer' }}
@@ -282,10 +271,11 @@ const PortoviejoMap = () => {
                         strokeLinejoin="round"
                         strokeOpacity={1}
                         fill={hoveredParish === 'jqvmap12_5845' ? '#007bff' : '#a6c1ff'}
-
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_5845'] || 'jqvmap12_5845'}
                         id="jqvmap12_5845"
                         className="parish-path"
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_5845')}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_5845')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_5845')}
                         style={{ cursor: 'pointer' }}
@@ -300,10 +290,12 @@ const PortoviejoMap = () => {
                         fill={hoveredParish === 'jqvmap12_6585' ? '#007bff' : '#a6c1ff'}
                         id="jqvmap12_6585"
                         className="parish-path"
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_6585')}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_6585')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_6585')}
                         style={{ cursor: 'pointer' }}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_6585'] || 'jqvmap12_6585'}
                     />
                     <path
                         d="M185.12,257.32L185.21,258.32L185.51,263.07L185.51,263.19L185.51,263.39L185.44,264.35L185.03,265.76L183.58,271.73L183.56,271.84L183.56,271.84L183.43,272.36L183.27,273L183.26,273.06L182.88,274.35L182.83,274.51L182.2,276.21L182.19,276.26L180.93,279.79L179.96,282.29L179.87,282.56L179.78,282.81L179.75,282.91L179.7,283.05L179.08,284.61L178.85,285.32L178.77,285.58L177.69,289.02L177.54,289.98L177.7,290.69L178.31,292.04L178.5,292.49L179.7,295.54L180.16,296.59L180.19,296.65L180.39,297.08L180.58,297.48L180.69,297.71L181.19,298.79L181.36,299.15L181.56,299.55L181.59,299.6L181.78,299.98L181.88,300.16L182.44,299.73L183.28,300.9L184.26,302.83L188.45,317.38L188.2,329.22L188.75,340.11L189.18,350.26L189.63,357.24L190.02,363.72L190.92,370.6L193.75,374.05L195.72,376.44L203.82,387.1L208.49,397.98L209.91,399.72L209.63,401.6L204.25,405.59L200.84,408.01L200.2,408.96L197.86,410.17L197.26,410.23L196.11,409.46L194.94,407.77L192.22,405.23L191.78,404.06L191.6,403.17L191.17,401.11L192.28,399.88L193.36,398.35L193.43,398.26L192.94,396.88L191.53,396.43L190.83,396.66L190.17,397L189.74,397.78L189.48,399.31L188.32,399.62L187.08,399.44L187.03,397.83L185.11,396.9L183.92,398.09L183.23,397.68L182.28,394.81L181.64,393.76L178.75,391.41L177.77,390.99L176.15,391.03L175.51,391.48L174.86,392.58L174.28,394.28L172.66,394.99L171.25,395.2L168.7,396.16L165.72,396.14L164.39,395.58L163.98,394.82L162.51,394.08L159.83,394.35L157.72,392.46L156.81,391.64L155.25,387.86L155.2,387.69L154.1,386.37L151.27,384.79L151.98,383.65L150.18,383.87L148.69,383.88L148.62,383.31L148.72,381.96L149.8,382.08L149.92,381.72L149,380L148.98,378.58L150.5,378.84L152.18,378.59L154.1,377.77L154.44,375.64L154.33,375.33L152.55,373.57L151.17,371.86L150.39,369.07L149.34,368.61L148.53,367.68L148.61,366.95L149.81,365.72L150.67,364.94L151.54,364.16L154.86,359.43L151.36,352.22L152.65,348.93L154.72,343.65L156.26,341.87L159.59,338.68L159.43,337.67L157.16,336.38L155.8,335.99L155.49,335.79L154.26,335.75L153.51,335.44L152.54,335.42L151.07,335.21L150.27,335.07L149.22,334.35L148.74,334.09L148.39,333.74L147.22,332.69L147.15,332.64L146.43,332.47L144.43,332.19L143.23,331.97L140.69,331.79L139.61,331.67L134.38,330.75L132.79,330.36L127.15,330.47L119.75,331.02L119.61,330.8L118.34,328.68L117.89,326.92L117.44,323.4L117.28,316.41L117.39,315.19L117.13,312.62L115.95,310.73L115.52,309.61L115.52,308.23L113.7,304.49L114.19,302.09L116.75,300.12L118.09,299.6L118.72,298.89L118.56,297.45L118.72,294.79L118.38,290.91L118.26,290.9L117.9,290.88L116.01,291.12L112.69,290.18L108,290.78L103.65,292.48L103.65,292.11L100.41,291.26L96.66,290.57L91.46,292.19L88.56,294.41L85.41,295.94L85.66,299.86L85.83,300.25L83.7,302.2L83.64,302.25L78.15,301.24L72.1,301.7L67.7,302.12L67.55,302.15L67.36,301.79L66.91,300.94L65.4,299.16L60.28,295.48L59.18,294.33L58.97,294.1L57.72,293.31L56.81,292.69L55.35,291.12L54.71,289.91L54.33,288.53L53.57,287.22L52.77,286.13L52.48,285.89L53.51,284.68L50.83,278.49L46.74,269.26L45.36,265.47L44.89,264.62L44.97,264.54L45.39,264.1L46.63,263.21L47.57,261.9L48.79,260.57L50.83,256.89L52.11,253.9L52.98,251.84L53.28,251.19L53.44,250.05L58.04,246.75L61.67,244.63L67.53,244L68.28,243.19L67.78,241.08L66.66,237.41L67.06,233.62L69.4,230.3L69.79,228.4L68.06,224.51L64.7,221.32L62.8,215.76L64.44,212.65L67.45,207.64L69.28,205.29L71.72,205.25L79.36,206.42L86.37,209.78L91.1,210.15L92.81,213.17L93.41,214.68L94.5,217.32L97.83,219.62L102.35,222.81L102.85,223.64L104.93,226.33L107.62,230.35L109.76,232.62L112.32,237.15L115.32,242.43L116.16,245.86L119.04,250.89L123.63,256.65L125.22,257.71L126.56,257.8L127.68,257.33L127.8,257.2L129.33,255.91L129.73,255.41L130.91,254.29L132.96,252.5L134.62,251.42L134.99,251.26L135.63,250.98L137.08,250.69L138.24,250.6L142.45,249.83L142.56,249.8L142.59,249.79L143.11,249.66L147.07,248.6L147.46,248.5L150.14,248.05L151.21,247.95L152.05,247.91L154.92,248.04L155.13,249.38L154.14,253.14L154.16,254.21L154.27,254.39L156.58,254.39L158.03,254.27L158.32,254.57L158.47,255.98L159.14,256.58L161.29,257.13L164.5,257.54L166.5,258.4L167.92,258.61L170.8,258.65L171.61,258.56L173.63,257.93L175.79,257.26L179.3,257.26L185.12,257.32Z"
@@ -313,10 +305,11 @@ const PortoviejoMap = () => {
                         strokeLinejoin="round"
                         strokeOpacity={1}
                         fill={hoveredParish === 'jqvmap12_6770' ? '#007bff' : '#a6c1ff'}
-
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_6770'] || 'jqvmap12_6770'}
                         id="jqvmap12_6770"
                         className="parish-path"
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_6770')}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_6770')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_6770')}
                         style={{ cursor: 'pointer' }}
@@ -329,10 +322,11 @@ const PortoviejoMap = () => {
                         strokeLinejoin="round"
                         strokeOpacity={1}
                         fill={hoveredParish === 'jqvmap12_6775' ? '#007bff' : '#a6c1ff'}
-
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_6775'] || 'jqvmap12_6775'}
                         id="jqvmap12_6775"
                         className="parish-path"
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_6775')}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_6775')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_6775')}
                         style={{ cursor: 'pointer' }}
@@ -347,32 +341,15 @@ const PortoviejoMap = () => {
                         fill={hoveredParish === 'jqvmap12_6910' ? '#007bff' : '#a6c1ff'}
                         id="jqvmap12_6910"
                         className="parish-path"
-                        onMouseEnter={(e) => handleMouseEnter(e, 'jqvmap12_6910')}
+                        onMouseEnter={() => handleMouseEnter('jqvmap12_6910')}
                         onMouseLeave={handleMouseLeave}
                         onClick={() => handleParishClick('jqvmap12_6910')}
                         style={{ cursor: 'pointer' }}
+                        data-tooltip-id="parish-tooltip"
+                        data-tooltip-content={parishNames['jqvmap12_6910'] || 'jqvmap12_6910'}
                     />
 
                 </svg>
-
-                {/* Tooltip */}
-                {tooltip.visible && (
-                    <div
-                        className="map-tooltip"
-                        style={{
-                            position: 'absolute',
-                            left: `${tooltip.x}px`,
-                            top: `${tooltip.y}px`,
-                            zIndex: 9999,
-                            pointerEvents: 'none'
-                        }}
-                    >
-                        <div className="tooltip-content">
-                            <i className="fas fa-map-pin me-1"></i>
-                            {tooltip.content}
-                        </div>
-                    </div>
-                )}
             </div>
 
             <div className="map-legend">
@@ -388,6 +365,26 @@ const PortoviejoMap = () => {
                     </div>
                 </div>
             </div>
+
+            {/* React Tooltip Component */}
+            <Tooltip
+                id="parish-tooltip"
+                followCursor={true}
+
+                offset={10}
+                arrow={false}
+                style={{
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    fontWeight: '500',
+                    padding: '8px 12px',
+                    boxShadow: '0 4px 12px rgba(0, 123, 255, 0.4)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    zIndex: 9999
+                }}
+            />
         </div>
     );
 };
