@@ -12,10 +12,14 @@ export const useDashboard = (user) => {
 
     // Candidatos definidos (igual que en Android)
     const candidatos = [
-        { id: 1, nombre: "Uno" },
-        { id: 2, nombre: "Dos" },
-        { id: 3, nombre: "Tres" }
+        { id: 1, nombre: "Pincay" },
+        { id: 2, nombre: "Dennys Guillen" },
+        { id: 3, nombre: "Rafael" }
     ];
+
+    // Estado para el modal de detalle de votos
+    const [showVotosModal, setShowVotosModal] = useState(false);
+    const [selectedVotoDetalle, setSelectedVotoDetalle] = useState(null);
 
     // Cargar los últimos 10 votos
     useEffect(() => {
@@ -42,14 +46,29 @@ export const useDashboard = (user) => {
         }
     }, [user]);
 
+    // Calcular total de votos por registro (suma de todos los candidatos)
+    const calcularTotalVotos = (voto) => {
+        if (!voto.votos || !Array.isArray(voto.votos)) return 0;
+        return voto.votos.reduce((sum, candidatoVoto) => {
+            return sum + (parseInt(candidatoVoto.numeroVotos) || 0);
+        }, 0);
+    };
+
     // Calcular estadísticas por candidato
     const getEstadisticasPorCandidato = () => {
         const estadisticas = candidatos.map(candidato => {
-            const votosDelCandidato = votos.filter(voto => voto.candidatoId === candidato.id);
-            const totalVotos = votosDelCandidato.reduce((sum, voto) =>
-                sum + parseInt(voto.numeroVotos || 0), 0
-            );
-            const totalActas = votosDelCandidato.length;
+            let totalVotos = 0;
+            let totalActas = 0;
+
+            votos.forEach(voto => {
+                if (voto.votos && Array.isArray(voto.votos)) {
+                    const votoDelCandidato = voto.votos.find(v => v.candidatoId === candidato.id);
+                    if (votoDelCandidato) {
+                        totalVotos += parseInt(votoDelCandidato.numeroVotos) || 0;
+                        totalActas += 1; // Contar el acta que contiene votos para este candidato
+                    }
+                }
+            });
 
             return {
                 ...candidato,
@@ -59,6 +78,18 @@ export const useDashboard = (user) => {
         });
 
         return estadisticas;
+    };
+
+    // Abrir modal de detalle de votos
+    const abrirModalVotos = (voto) => {
+        setSelectedVotoDetalle(voto);
+        setShowVotosModal(true);
+    };
+
+    // Cerrar modal de votos
+    const cerrarModalVotos = () => {
+        setShowVotosModal(false);
+        setSelectedVotoDetalle(null);
     };
 
     // Abrir modal de imágenes
@@ -105,9 +136,14 @@ export const useDashboard = (user) => {
         showImageModal,
         selectedImageIndex,
         setSelectedImageIndex,
+        showVotosModal,
+        selectedVotoDetalle,
+        calcularTotalVotos,
         getEstadisticasPorCandidato,
         abrirModalImagenes,
+        abrirModalVotos,
         cerrarModal,
+        cerrarModalVotos,
         siguienteImagen,
         imagenAnterior,
         abrirImagenEnNuevaVentana
