@@ -3,10 +3,10 @@
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 15px;
     padding: 20px;
-    margin-bottom: 30px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
+    height: 100%;
 }
 
 .map-header {
@@ -180,4 +180,20 @@
         stroke-dasharray: 1000;
         stroke-dashoffset: 0;
     }
+}
+
+/* Estilos para estadísticas compactas */
+.estadisticas-compactas {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.estadistica-item {
+    text-align: center;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }

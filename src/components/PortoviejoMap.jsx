@@ -422,7 +422,7 @@ const PortoviejoMap = ({ onParroquiasSelectionChange, selectedParroquias = [] })
         : Object.keys(parishNames).length;
 
     return (
-        <div className="portoviejo-map-container">
+        <div className="portoviejo-map-container w-100">
             {/*
            
             <div className="map-header">

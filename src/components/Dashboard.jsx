@@ -20,25 +20,46 @@ const Dashboard = ({ user }) => {
         votos,
         loading,
         candidatos,
-        selectedVoto,
-        showImageModal,
         selectedImageIndex,
         setSelectedImageIndex,
         showVotosModal,
         selectedVotoDetalle,
         calcularTotalVotos,
         getEstadisticasPorCandidato,
-        abrirModalImagenes,
         abrirModalVotos,
-        cerrarModal,
         cerrarModalVotos,
         siguienteImagen,
-        imagenAnterior,
-        abrirImagenEnNuevaVentana
+        imagenAnterior
     } = useDashboard(user, selectedParroquias);
 
     const estadisticas = getEstadisticasPorCandidato();
     const totalVotosGeneral = estadisticas.reduce((sum, candidato) => sum + candidato.totalVotos, 0);
+
+    // Calcular estadísticas adicionales
+    const calcularEstadisticasAdicionales = () => {
+        // Total de sufragantes (suma de todos los totalSufragantes de todas las actas)
+        const totalSufragantes = votos.reduce((sum, voto) => {
+            return sum + (parseInt(voto.totalSufragantes) || 0);
+        }, 0);
+
+        // Actas validadas (revisado === true)
+        const actasValidadas = votos.filter(voto => voto.revisado === true).length;
+
+        // Actas sin validar (revisado === false o no tiene el campo)
+        const actasSinValidar = votos.filter(voto => voto.revisado !== true).length;
+
+        // Total de actas registradas
+        const totalActas = votos.length;
+
+        return {
+            totalSufragantes,
+            actasValidadas,
+            actasSinValidar,
+            totalActas
+        };
+    };
+
+    const estadisticasAdicionales = calcularEstadisticasAdicionales();
 
     // Cargar información de parroquias al montar el componente
     useEffect(() => {
@@ -117,36 +138,12 @@ const Dashboard = ({ user }) => {
     }
 
     return (
-        <Container className="py-4">
-            {/* Header */}
-            <Row className="mb-4">
-                <Col>
-                    <Card className="shadow-sm">
-                        <Card.Header className="bg-success text-white">
-                            <h3 className="mb-0">📊 Dashboard Electoral - Resultados</h3>
-                        </Card.Header>
-                        <Card.Body>
-                            <Row>
-                                <Col md={6}>
-                                    <Alert variant="info" className="mb-0">
-                                        <strong>Total de votos:</strong> {totalVotosGeneral} votos
-                                    </Alert>
-                                </Col>
-                                <Col md={6}>
-                                    <Alert variant="success" className="mb-0">
-                                        <strong>Actas registradas:</strong> {votos.length} actas
-                                    </Alert>
-                                </Col>
-                            </Row>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+        <Container className="py-3">
 
             {/* Layout Principal: Mapa + Estadísticas */}
-            <Row className="mb-4">
+            <Row className="mb-4 gx-3">
                 {/* Mapa Interactivo de Portoviejo - 70% del ancho */}
-                <Col lg={8} className="mb-4">
+                <Col lg={8} className="d-flex mb-4 mb-lg-0">
                     <PortoviejoMap
                         onParroquiasSelectionChange={setSelectedParroquias}
                         selectedParroquias={selectedParroquias}
@@ -154,85 +151,108 @@ const Dashboard = ({ user }) => {
                 </Col>
 
                 {/* Estadísticas por Candidato - 30% del ancho */}
-                <Col lg={4}>
-                    <Card className="shadow-sm h-100">
-                        <Card.Header className="bg-primary text-white text-center">
-                            <h5 className="mb-0">🏛️ Candidatos a Alcalde</h5>
-                        </Card.Header>
-                        <Card.Body className="p-3" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                            {estadisticas
-                                .filter(candidato => candidato.totalVotos > 0) // Mostrar solo candidatos con votos
-                                .sort((a, b) => b.totalVotos - a.totalVotos) // Ordenar de mayor a menor por votos
-                                .map((candidato, index) => {
-                                    const porcentaje = totalVotosGeneral > 0 ?
-                                        Math.round((candidato.totalVotos / totalVotosGeneral) * 100) : 0;
+                <Col lg={4} className="d-flex">
+                    <Card className="shadow-sm h-100 w-100">
+                        <Card.Body className="p-3 d-flex flex-column h-100">
+                            {/* Estadísticas Electorales - FIJAS (no scrolleable) */}
+                            <div className="mb-3 p-3 bg-light border rounded flex-shrink-0">
+                                <div className="row g-2 mb-2">
+                                    <div className="col-4 text-center">
+                                        <div className="fw-bold text-primary">{totalVotosGeneral.toLocaleString()}</div>
+                                        <small className="text-muted">Total Votos</small>
+                                    </div>
+                                    <div className="col-4 text-center">
+                                        <div className="fw-bold text-warning">{estadisticasAdicionales.totalSufragantes.toLocaleString()}</div>
+                                        <small className="text-muted">Sufragantes</small>
+                                    </div>
+                                    <div className="col-4 text-center">
+                                        <div className="fw-bold text-info">{estadisticasAdicionales.totalActas}</div>
+                                        <small className="text-muted">Actas</small>
+                                    </div>
+                                </div>
+                                <div className="row g-2">
+                                    <div className="col-6 text-center">
+                                        <div className="fw-bold text-success">{estadisticasAdicionales.actasValidadas}</div>
+                                        <small className="text-muted">
+                                            Validadas ({estadisticasAdicionales.totalActas > 0 ? Math.round((estadisticasAdicionales.actasValidadas / estadisticasAdicionales.totalActas) * 100) : 0}%)
+                                        </small>
+                                    </div>
+                                    <div className="col-6 text-center">
+                                        <div className="fw-bold text-danger">{estadisticasAdicionales.actasSinValidar}</div>
+                                        <small className="text-muted">
+                                            Sin Validar ({estadisticasAdicionales.totalActas > 0 ? Math.round((estadisticasAdicionales.actasSinValidar / estadisticasAdicionales.totalActas) * 100) : 0}%)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
 
-                                    // Colores para las barras de progreso - el primer lugar tendrá color dorado/success
-                                    const colores = ['success', 'primary', 'info', 'warning', 'danger', 'secondary', 'dark', 'primary'];
-                                    const color = colores[index % colores.length];
+                            {/* Lista de Candidatos - SCROLLEABLE */}
+                            <div className="flex-grow-1 overflow-auto"
+                                style={{ minHeight: 0 }}>
+                                {estadisticas
+                                    .filter(candidato => candidato.totalVotos > 0) // Mostrar solo candidatos con votos
+                                    .sort((a, b) => b.totalVotos - a.totalVotos) // Ordenar de mayor a menor por votos
+                                    .map((candidato, index) => {
+                                        const porcentaje = totalVotosGeneral > 0 ?
+                                            Math.round((candidato.totalVotos / totalVotosGeneral) * 100) : 0;
 
-                                    // Indicadores de posición
-                                    const posicionIcon = index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}°`;
-                                    const esLider = index === 0;
+                                        // Colores para las barras de progreso - el primer lugar tendrá color dorado/success
+                                        const colores = ['success', 'primary', 'info', 'warning', 'danger', 'secondary', 'dark', 'primary'];
+                                        const color = colores[index % colores.length];
 
-                                    return (
-                                        <div key={candidato.id} className={`mb-3 p-2 border rounded ${esLider ? 'bg-warning bg-opacity-25 border-warning' : 'bg-light'}`}>
-                                            <div className="d-flex justify-content-between align-items-center mb-2">
-                                                <div className="d-flex align-items-center">
-                                                    <span className="me-2" style={{ fontSize: '16px' }}>{posicionIcon}</span>
-                                                    <h6 className={`mb-0 ${esLider ? 'text-warning-emphasis fw-bold' : 'text-dark fw-bold'}`}>
-                                                        {candidato.nombre}
-                                                    </h6>
+                                        // Solo mostrar trofeo para el primer lugar
+                                        const posicionIcon = index === 0 ? '🏆' : '';
+                                        const esLider = index === 0;
+
+                                        return (
+                                            <div key={candidato.id} className={`mb-3 p-2 border rounded ${esLider ? 'bg-warning bg-opacity-25 border-warning' : 'bg-light'}`}>
+                                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                                    <div className="d-flex align-items-center">
+                                                        {posicionIcon && <span className="me-2" style={{ fontSize: '16px' }}>{posicionIcon}</span>}
+                                                        <div>
+                                                            <h6 className={`mb-0 ${esLider ? 'text-warning-emphasis fw-bold' : 'text-dark fw-bold'}`}>
+                                                                {candidato.nombre}
+                                                            </h6>
+                                                            <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                                                                {candidato.totalVotos.toLocaleString()} votos
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-end">
+                                                        <span className="fw-bold text-secondary">{porcentaje}%</span>
+                                                    </div>
                                                 </div>
-                                                <div className="text-end">
-                                                    <Badge bg={color} className="me-1">{candidato.totalVotos}</Badge>
-                                                    <Badge bg="outline-secondary" text="dark">{porcentaje}%</Badge>
+                                                <div className="progress" style={{ height: '8px' }}>
+                                                    <div
+                                                        className={`progress-bar bg-${color}`}
+                                                        role="progressbar"
+                                                        style={{ width: `${porcentaje}%` }}
+                                                        aria-valuenow={porcentaje}
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100"
+                                                    ></div>
                                                 </div>
                                             </div>
-                                            <div className="progress" style={{ height: '8px' }}>
-                                                <div
-                                                    className={`progress-bar bg-${color}`}
-                                                    role="progressbar"
-                                                    style={{ width: `${porcentaje}%` }}
-                                                    aria-valuenow={porcentaje}
-                                                    aria-valuemin="0"
-                                                    aria-valuemax="100"
-                                                ></div>
-                                            </div>
-                                            <small className="text-muted">
-                                                {candidato.totalActas} acta{candidato.totalActas !== 1 ? 's' : ''} registrada{candidato.totalActas !== 1 ? 's' : ''}
-                                            </small>
+                                        );
+                                    })}
+
+                                {/* Mensaje cuando no hay candidatos con votos */}
+                                {estadisticas.filter(candidato => candidato.totalVotos > 0).length === 0 && (
+                                    <div className="text-center py-4">
+                                        <div className="text-muted">
+                                            <h6>📊 Sin resultados aún</h6>
+                                            <p className="mb-0">Los candidatos aparecerán aquí cuando reciban votos</p>
                                         </div>
-                                    );
-                                })}
-
-                            {/* Mensaje cuando no hay candidatos con votos */}
-                            {estadisticas.filter(candidato => candidato.totalVotos > 0).length === 0 && (
-                                <div className="text-center py-4">
-                                    <div className="text-muted">
-                                        <h6>📊 Sin resultados aún</h6>
-                                        <p className="mb-0">Los candidatos aparecerán aquí cuando reciban votos</p>
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Resumen total */}
-                            <div className="mt-3 pt-3 border-top">
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <strong className="text-dark">Total General:</strong>
-                                    <div>
-                                        <Badge bg="success" className="me-1">{totalVotosGeneral}</Badge>
-                                        <Badge bg="info">{votos.length} actas</Badge>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
 
-            {/* Lista de Últimos 10 Votos */}
-            <Row>
+            {/* Lista de Últimss 10 Actas */}
+            <Row className="gx-3">
                 <Col>
                     <Card className="shadow-sm">
                         <Card.Header className="bg-info text-white">
@@ -248,7 +268,6 @@ const Dashboard = ({ user }) => {
                                     <thead className="table-dark">
                                         <tr>
                                             <th>Fecha y Hora</th>
-                                            <th>Mesa</th>
                                             <th>Total Votos</th>
                                             <th>Acción</th>
                                         </tr>
@@ -260,14 +279,7 @@ const Dashboard = ({ user }) => {
                                                 <tr key={voto.id}>
                                                     <td>{formatearFecha(voto.timestamp)}</td>
                                                     <td>
-                                                        <Badge variant="info">
-                                                            Mesa {voto.numeroMesa}
-                                                        </Badge>
-                                                    </td>
-                                                    <td>
-                                                        <Badge bg="primary">
-                                                            {totalVotos} votos
-                                                        </Badge>
+                                                        <strong>{totalVotos} votos</strong>
                                                     </td>
                                                     <td>
                                                         <Button
@@ -311,28 +323,68 @@ const Dashboard = ({ user }) => {
                             {/* Columna izquierda: Fotos */}
                             <Col md={6}>
                                 <Card className="h-100">
-                                    <Card.Header>
-                                        <h6 className="mb-0">📸 Fotos del Acta</h6>
-                                    </Card.Header>
-                                    <Card.Body>
+                                    <Card.Body className="p-0">
                                         {selectedVotoDetalle.imageUrls && selectedVotoDetalle.imageUrls.length > 0 ? (
                                             <div className="text-center">
-                                                {/* Imagen actual con flechas overlay */}
-                                                <div className="mb-3 position-relative">
-                                                    <img
-                                                        src={selectedVotoDetalle.imageUrls[selectedImageIndex]}
-                                                        alt={`Foto ${selectedImageIndex + 1}`}
+                                                {/* Imagen actual con overlays */}
+                                                <div className="position-relative" style={{ height: '100%', minHeight: '500px' }}>
+                                                    <div
+                                                        className="image-zoom-container"
                                                         style={{
                                                             width: '100%',
-                                                            maxHeight: '400px',
-                                                            objectFit: 'contain',
+                                                            height: '100%',
+                                                            overflow: 'hidden',
                                                             border: '1px solid #dee2e6',
-                                                            borderRadius: '5px'
+                                                            borderRadius: '5px',
+                                                            cursor: 'zoom-in'
                                                         }}
-                                                    />
+                                                        onMouseMove={(e) => {
+                                                            const container = e.currentTarget;
+                                                            const img = container.querySelector('img');
+                                                            const rect = container.getBoundingClientRect();
+                                                            const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                                            const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-                                                    {/* Flechas overlay SOBRE la imagen */}
-                                                    {selectedVotoDetalle.imageUrls.length > 1 && (
+                                                            // Limpiar timeout anterior si existe
+                                                            if (container.zoomTimeout) {
+                                                                clearTimeout(container.zoomTimeout);
+                                                            }
+
+                                                            // Crear nuevo timeout para activar zoom después de 200ms de inactividad
+                                                            container.zoomTimeout = setTimeout(() => {
+                                                                img.style.transformOrigin = `${x}% ${y}%`;
+                                                                img.style.transform = 'scale(2)';
+                                                            }, 200);
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            const container = e.currentTarget;
+                                                            const img = container.querySelector('img');
+
+                                                            // Limpiar timeout al salir
+                                                            if (container.zoomTimeout) {
+                                                                clearTimeout(container.zoomTimeout);
+                                                                container.zoomTimeout = null;
+                                                            }
+
+                                                            img.style.transform = 'scale(1)';
+                                                            img.style.transformOrigin = 'center center';
+                                                        }}
+                                                    >
+                                                        <img
+                                                            src={selectedVotoDetalle.imageUrls[selectedImageIndex]}
+                                                            alt={`Foto ${selectedImageIndex + 1}`}
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'contain',
+                                                                transition: 'transform 0.3s ease',
+                                                                transformOrigin: 'center center'
+                                                            }}
+                                                        />
+                                                    </div>
+
+                                                    {/* Flechas overlay SOBRE la imagen - Solo si hay más de 1 imagen */}
+                                                    {selectedVotoDetalle.imageUrls && selectedVotoDetalle.imageUrls.length > 1 && (
                                                         <>
                                                             <button
                                                                 onClick={imagenAnterior}
@@ -383,32 +435,68 @@ const Dashboard = ({ user }) => {
                                                             </button>
                                                         </>
                                                     )}
-                                                </div>
 
-                                                {/* Puntos de paginación DEBAJO de la imagen */}
-                                                {selectedVotoDetalle.imageUrls.length > 1 && (
-                                                    <div className="d-flex justify-content-center align-items-center mb-3" style={{ gap: '8px' }}>
-                                                        {selectedVotoDetalle.imageUrls.map((_, index) => (
-                                                            <button
-                                                                key={index}
-                                                                onClick={() => setSelectedImageIndex(index)}
-                                                                style={{
-                                                                    width: '10px',
-                                                                    height: '10px',
-                                                                    borderRadius: '50%',
-                                                                    border: 'none',
-                                                                    background: index === selectedImageIndex ? '#007bff' : '#ccc',
-                                                                    cursor: 'pointer'
-                                                                }}
-                                                            />
-                                                        ))}
+                                                    {/* Contador de imágenes overlay en la esquina superior derecha */}
+                                                    <div
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: '8px',
+                                                            right: '8px',
+                                                            background: 'rgba(0,0,0,0.7)',
+                                                            color: 'white',
+                                                            padding: '4px 8px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '12px',
+                                                            zIndex: 1000
+                                                        }}
+                                                    >
+                                                        📷 {selectedImageIndex + 1} / {selectedVotoDetalle.imageUrls.length}
                                                     </div>
-                                                )}
+
+                                                    {/* Puntos de paginación overlay en la parte inferior - Solo si hay más de 1 imagen */}
+                                                    {selectedVotoDetalle.imageUrls && selectedVotoDetalle.imageUrls.length > 1 && (
+                                                        <div
+                                                            className="d-flex justify-content-center align-items-center"
+                                                            style={{
+                                                                position: 'absolute',
+                                                                bottom: '10px',
+                                                                left: '50%',
+                                                                transform: 'translateX(-50%)',
+                                                                gap: '8px',
+                                                                zIndex: 1000
+                                                            }}
+                                                        >
+                                                            {selectedVotoDetalle.imageUrls.map((_, index) => (
+                                                                <button
+                                                                    key={index}
+                                                                    onClick={() => setSelectedImageIndex(index)}
+                                                                    style={{
+                                                                        width: '12px',
+                                                                        height: '12px',
+                                                                        minWidth: '12px',
+                                                                        minHeight: '12px',
+                                                                        borderRadius: '50%',
+                                                                        border: '2px solid rgba(255,255,255,0.8)',
+                                                                        background: index === selectedImageIndex ? '#007bff' : 'rgba(255,255,255,0.6)',
+                                                                        cursor: 'pointer',
+                                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                                                                        padding: '0',
+                                                                        margin: '0',
+                                                                        boxSizing: 'border-box',
+                                                                        outline: 'none'
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         ) : (
-                                            <div className="text-center py-4 text-muted">
-                                                <h6>📷 Sin fotos</h6>
-                                                <p>No se encontraron imágenes para esta acta</p>
+                                            <div className="d-flex align-items-center justify-content-center h-100 text-muted">
+                                                <div className="text-center">
+                                                    <h6>📷 Sin fotos</h6>
+                                                    <p className="mb-0">No se encontraron imágenes para esta acta</p>
+                                                </div>
                                             </div>
                                         )}
                                     </Card.Body>
@@ -445,7 +533,7 @@ const Dashboard = ({ user }) => {
                                             </div>
                                         </div>
                                     </Card.Header>
-                                    <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                    <Card.Body>
                                         {/* Información de ubicación */}
                                         <div className="mb-3">
                                             <Row>
@@ -586,38 +674,54 @@ const Dashboard = ({ user }) => {
                                         <div className="mb-3">
                                             <label className="form-label"><strong>Votos por Candidato:</strong></label>
                                             {selectedVotoDetalle.votos && (
-                                                <Table striped bordered size="sm">
-                                                    <thead className="table-primary">
-                                                        <tr>
-                                                            <th>Candidato</th>
-                                                            <th className="text-center">Votos</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {selectedVotoDetalle.votos.map((candidatoVoto, index) => (
-                                                            <tr key={index}>
-                                                                <td>
-                                                                    <small>{candidatoVoto.candidatoNombre || 'Candidato no encontrado'}</small>
-                                                                </td>
-                                                                <td className="text-center">
-                                                                    <Badge bg="primary" className="px-2">
-                                                                        {candidatoVoto.numeroVotos}
-                                                                    </Badge>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                    <tfoot className="table-success">
-                                                        <tr>
-                                                            <th><small>Total</small></th>
-                                                            <th className="text-center">
-                                                                <Badge bg="success" className="px-2">
-                                                                    {calcularTotalVotos(selectedVotoDetalle)}
-                                                                </Badge>
-                                                            </th>
-                                                        </tr>
-                                                    </tfoot>
-                                                </Table>
+                                                (() => {
+                                                    const totalVotos = calcularTotalVotos(selectedVotoDetalle);
+                                                    const votosOrdenados = [...selectedVotoDetalle.votos]
+                                                        .sort((a, b) => parseInt(b.numeroVotos) - parseInt(a.numeroVotos));
+
+                                                    return (
+                                                        <Table striped bordered size="sm">
+                                                            <thead className="table-primary">
+                                                                <tr>
+                                                                    <th>Candidato</th>
+                                                                    <th className="text-center">Votos</th>
+                                                                    <th className="text-center">%</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {votosOrdenados.map((candidatoVoto, index) => {
+                                                                    const votos = parseInt(candidatoVoto.numeroVotos) || 0;
+                                                                    const porcentaje = totalVotos > 0 ? Math.round((votos / totalVotos) * 100) : 0;
+
+                                                                    return (
+                                                                        <tr key={index}>
+                                                                            <td>
+                                                                                <small>{candidatoVoto.candidatoNombre || 'Candidato no encontrado'}</small>
+                                                                            </td>
+                                                                            <td className="text-center">
+                                                                                <strong>{votos}</strong>
+                                                                            </td>
+                                                                            <td className="text-center">
+                                                                                <strong>{porcentaje}%</strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                })}
+                                                            </tbody>
+                                                            <tfoot className="table-success">
+                                                                <tr>
+                                                                    <th><small>Total</small></th>
+                                                                    <th className="text-center">
+                                                                        <strong className="text-success">{totalVotos}</strong>
+                                                                    </th>
+                                                                    <th className="text-center">
+                                                                        <strong className="text-success">100%</strong>
+                                                                    </th>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </Table>
+                                                    );
+                                                })()
                                             )}
                                         </div>
 
@@ -644,131 +748,7 @@ const Dashboard = ({ user }) => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Modal de Imágenes */}
-            <Modal
-                show={showImageModal}
-                onHide={cerrarModal}
-                size="xl"
-                centered
-                dialogClassName="modal-90w"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        📸 Fotos - Mesa {selectedVoto?.numeroMesa}
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body style={{ padding: '20px' }}>
-                    {selectedVoto && selectedVoto.imageUrls && selectedVoto.imageUrls.length > 0 && (
-                        <div className="text-center">
-                            {/* Contenedor de imagen con flechas overlay */}
-                            <div className="position-relative mb-3">
-                                <img
-                                    src={selectedVoto.imageUrls[selectedImageIndex]}
-                                    alt={`Foto ${selectedImageIndex + 1}`}
-                                    style={{
-                                        width: '100%',
-                                        height: '80vh',
-                                        maxHeight: '85vh',
-                                        objectFit: 'contain',
-                                        cursor: 'pointer',
-                                        border: '1px solid #dee2e6',
-                                        borderRadius: '8px'
-                                    }}
-                                    onClick={() => abrirImagenEnNuevaVentana(selectedVoto.imageUrls[selectedImageIndex])}
-                                />
 
-                                {/* Flechas overlay SOBRE la imagen */}
-                                {selectedVoto.imageUrls.length > 1 && (
-                                    <>
-                                        <button
-                                            onClick={imagenAnterior}
-                                            style={{
-                                                position: 'absolute',
-                                                left: '10px',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                background: 'rgba(0,0,0,0.7)',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '50%',
-                                                width: '50px',
-                                                height: '50px',
-                                                fontSize: '24px',
-                                                cursor: 'pointer',
-                                                zIndex: 1000,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => e.target.style.background = 'rgba(0,0,0,0.9)'}
-                                            onMouseLeave={(e) => e.target.style.background = 'rgba(0,0,0,0.7)'}
-                                        >
-                                            ‹
-                                        </button>
-
-                                        <button
-                                            onClick={siguienteImagen}
-                                            style={{
-                                                position: 'absolute',
-                                                right: '10px',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                background: 'rgba(0,0,0,0.7)',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '50%',
-                                                width: '50px',
-                                                height: '50px',
-                                                fontSize: '24px',
-                                                cursor: 'pointer',
-                                                zIndex: 1000,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => e.target.style.background = 'rgba(0,0,0,0.9)'}
-                                            onMouseLeave={(e) => e.target.style.background = 'rgba(0,0,0,0.7)'}
-                                        >
-                                            ›
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Puntos de paginación DEBAJO de la imagen */}
-                            {selectedVoto.imageUrls.length > 1 && (
-                                <div className="d-flex justify-content-center align-items-center" style={{ gap: '10px' }}>
-                                    {selectedVoto.imageUrls.map((_, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => setSelectedImageIndex(index)}
-                                            style={{
-                                                width: '12px',
-                                                height: '12px',
-                                                borderRadius: '50%',
-                                                border: 'none',
-                                                background: index === selectedImageIndex ? '#007bff' : '#ccc',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="success" onClick={() => abrirImagenEnNuevaVentana(selectedVoto?.imageUrls[selectedImageIndex])}>
-                        Abrir en Nueva Ventana
-                    </Button>
-                    <Button variant="secondary" onClick={cerrarModal}>
-                        Cerrar
-                    </Button>
-                </Modal.Footer>
-            </Modal>
         </Container>
     );
 };

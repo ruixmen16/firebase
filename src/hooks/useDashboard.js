@@ -122,6 +122,8 @@ export const useDashboard = (user, selectedParroquias = []) => {
     // Abrir modal de detalle de votos
     const abrirModalVotos = (voto) => {
         setSelectedVotoDetalle(voto);
+        // Resetear índice de imagen, especialmente importante para imágenes individuales
+        setSelectedImageIndex(0);
         setShowVotosModal(true);
     };
 
@@ -147,17 +149,23 @@ export const useDashboard = (user, selectedParroquias = []) => {
 
     // Navegar entre imágenes
     const siguienteImagen = () => {
-        if (selectedVoto && selectedVoto.imageUrls) {
+        // Determinar qué voto usar basándose en qué modal está abierto
+        const votoActivo = showVotosModal ? selectedVotoDetalle : selectedVoto;
+
+        if (votoActivo && votoActivo.imageUrls && votoActivo.imageUrls.length > 1) {
             setSelectedImageIndex((prev) =>
-                prev < selectedVoto.imageUrls.length - 1 ? prev + 1 : 0
+                prev < votoActivo.imageUrls.length - 1 ? prev + 1 : 0
             );
         }
     };
 
     const imagenAnterior = () => {
-        if (selectedVoto && selectedVoto.imageUrls) {
+        // Determinar qué voto usar basándose en qué modal está abierto
+        const votoActivo = showVotosModal ? selectedVotoDetalle : selectedVoto;
+
+        if (votoActivo && votoActivo.imageUrls && votoActivo.imageUrls.length > 1) {
             setSelectedImageIndex((prev) =>
-                prev > 0 ? prev - 1 : selectedVoto.imageUrls.length - 1
+                prev > 0 ? prev - 1 : votoActivo.imageUrls.length - 1
             );
         }
     };
