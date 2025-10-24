@@ -5,11 +5,16 @@ import { db } from '../firebase-config';
 import { collection, getDocs } from 'firebase/firestore';
 import './PortoviejoMap.css';
 
-const PortoviejoMap = ({ onParroquiasSelectionChange, selectedParroquias = [] }) => {
+const PortoviejoMap = ({
+    onParroquiasSelectionChange,
+    selectedParroquias = [],
+    onZonasSelectionChange
+}) => {
     const [hoveredParish, setHoveredParish] = useState(null);
     const [parroquias, setParroquias] = useState([]);
     const [selectedCircunscripcion, setSelectedCircunscripcion] = useState([{ label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' }]);
     const [selectedParroquia, setSelectedParroquia] = useState([{ label: 'TODAS LAS PARROQUIAS', value: 'all' }]);
+    const [selectedZona, setSelectedZona] = useState([{ label: 'TODAS LAS ZONAS', value: 'all' }]);
     const [activePaths, setActivePaths] = useState([]);
 
     // Mapeo de IDs a nombres de parroquias
@@ -54,6 +59,7 @@ const PortoviejoMap = ({ onParroquiasSelectionChange, selectedParroquias = [] })
                 // Inicializar los selectores en "TODAS"
                 setSelectedCircunscripcion([{ label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' }]);
                 setSelectedParroquia([{ label: 'TODAS LAS PARROQUIAS', value: 'all' }]);
+                setSelectedZona([{ label: 'TODAS LAS ZONAS', value: 'all' }]);
 
                 // Notificar al Dashboard que todos están seleccionados inicialmente (array vacío = todas)
                 if (onParroquiasSelectionChange) {
@@ -148,6 +154,79 @@ const PortoviejoMap = ({ onParroquiasSelectionChange, selectedParroquias = [] })
         ];
     };
 
+    // Obtener opciones de zonas filtradas por parroquias seleccionadas
+    const getZonaOptions = () => {
+        let zonasDisponibles = [];
+
+        // Filtrar por parroquias seleccionadas
+        const esParroquiaTodas = !selectedParroquia || selectedParroquia.length === 0 ||
+            (selectedParroquia.length === 1 && selectedParroquia[0].value === 'all');
+
+        if (esParroquiaTodas) {
+            // Si no hay parroquias específicas seleccionadas, mostrar todas las zonas de todas las parroquias
+            zonasDisponibles = parroquias.flatMap(p =>
+                (p.zonas || []).map(zona => ({
+                    ...zona,
+                    parroquiaInfo: { id: p.id, nombre: p.strNombre, id_svg: p.id_svg }
+                }))
+            );
+        } else {
+            // Filtrar zonas solo de las parroquias seleccionadas
+            const parroquiasSeleccionadas = selectedParroquia
+                .filter(p => p.value !== 'all')
+                .map(p => p.value); // id_svg values
+
+            const parroquiasFiltradas = parroquias.filter(p =>
+                parroquiasSeleccionadas.includes(p.id_svg)
+            );
+
+            zonasDisponibles = parroquiasFiltradas.flatMap(p =>
+                (p.zonas || []).map(zona => ({
+                    ...zona,
+                    parroquiaInfo: { id: p.id, nombre: p.strNombre, id_svg: p.id_svg }
+                }))
+            );
+        }
+
+        // Crear opciones únicas (algunas zonas pueden repetirse en diferentes parroquias)
+        const zonasUnicas = zonasDisponibles.reduce((acc, zona) => {
+            const key = `${zona.intCodigo}-${zona.strNombre}`;
+            if (!acc[key]) {
+                acc[key] = zona;
+            }
+            return acc;
+        }, {});
+
+        const options = Object.values(zonasUnicas).map(zona => ({
+            label: `${zona.strNombre} (Código: ${zona.intCodigo})`,
+            value: zona.intCodigo,
+            data: zona
+        }));
+
+        // Verificar si todas las zonas individuales están seleccionadas
+        const selectedIndividualZonas = selectedZona
+            ?.filter(s => s.value !== 'all')
+            .map(s => s.value) || [];
+
+        const allIndividualZonas = options.map(opt => opt.value);
+        const todasLasZonasSeleccionadas = allIndividualZonas.length > 0 &&
+            allIndividualZonas.every(codigo => selectedIndividualZonas.includes(codigo));
+
+        if (todasLasZonasSeleccionadas) {
+            return options;
+        }
+
+        return [
+            {
+                label: esParroquiaTodas
+                    ? 'TODAS LAS ZONAS'
+                    : 'TODAS LAS ZONAS (DE PARROQUIAS SELECCIONADAS)',
+                value: 'all'
+            },
+            ...options
+        ];
+    };
+
     // Función helper para manejar lógica exclusiva "TODAS" vs específicas
     const handleExclusiveSelection = (selectedOptions, allValue = 'all', availableOptions = []) => {
         if (!selectedOptions || selectedOptions.length === 0) {
@@ -214,8 +293,26 @@ const PortoviejoMap = ({ onParroquiasSelectionChange, selectedParroquias = [] })
         const processedOptions = handleExclusiveSelection(selectedOptions, 'all', availableOptions);
         setSelectedParroquia(processedOptions);
 
+        // Resetear zonas cuando cambian las parroquias
+        setSelectedZona([{ label: 'TODAS LAS ZONAS', value: 'all' }]);
+
         // Actualizar el filtro
         updateFilterFromSelectors(selectedCircunscripcion, processedOptions);
+    };
+
+    // Manejar cambio de zona (multi-select)
+    const handleZonaChange = (selectedOptions) => {
+        // Aplicar lógica exclusiva pasando las opciones disponibles
+        const availableOptions = getZonaOptions();
+        const processedOptions = handleExclusiveSelection(selectedOptions, 'all', availableOptions);
+        setSelectedZona(processedOptions);
+
+        // Notificar al componente padre sobre cambios de zona
+        if (onZonasSelectionChange) {
+            onZonasSelectionChange(processedOptions);
+        }
+
+        console.log('🎯 Zonas seleccionadas:', processedOptions);
     };
 
     // Calcular parroquias basándose en circunscripciones (función pura)
@@ -507,6 +604,43 @@ const PortoviejoMap = ({ onParroquiasSelectionChange, selectedParroquias = [] })
                             option: (base, state) => ({
                                 ...base,
                                 backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#e3f2fd' : 'white',
+                                color: state.isSelected ? 'white' : '#495057'
+                            })
+                        }}
+                    />
+                </div>
+
+                {/* Selector de ZONAS - Tercer nivel de filtrado */}
+                <div style={{ flex: 1, minWidth: '250px' }}>
+                    <label style={{
+                        display: 'block',
+                        marginBottom: '8px',
+                        fontWeight: 'bold',
+                        color: '#495057'
+                    }}>
+                        ZONA:
+                    </label>
+                    <Select
+                        value={selectedZona}
+                        onChange={handleZonaChange}
+                        options={getZonaOptions()}
+                        placeholder="Seleccionar zona..."
+                        isSearchable={true}
+                        isDisabled={!selectedParroquia || selectedParroquia.length === 0}
+                        isMulti={true}
+                        closeMenuOnSelect={false}
+                        styles={{
+                            control: (base) => ({
+                                ...base,
+                                borderColor: '#28a745',
+                                boxShadow: 'none',
+                                '&:hover': {
+                                    borderColor: '#1e7e34'
+                                }
+                            }),
+                            option: (base, state) => ({
+                                ...base,
+                                backgroundColor: state.isSelected ? '#28a745' : state.isFocused ? '#d4edda' : 'white',
                                 color: state.isSelected ? 'white' : '#495057'
                             })
                         }}

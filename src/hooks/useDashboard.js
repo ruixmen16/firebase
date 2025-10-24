@@ -27,13 +27,13 @@ export const useDashboard = (user, selectedParroquias = []) => {
     const [showVotosModal, setShowVotosModal] = useState(false);
     const [selectedVotoDetalle, setSelectedVotoDetalle] = useState(null);
 
-    // Cargar los últimos 10 votos
+    // Cargar los últimos 20 votos para mostrar actividad reciente
     useEffect(() => {
         if (user) {
             const q = query(
                 collection(db, "votos"), // Nombre de colección que viene de Android
                 orderBy("timestamp", "desc"),
-                limit(10)
+                limit(20) // Aumentamos a 20 para mejor visibilidad
             );
 
             const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -93,8 +93,10 @@ export const useDashboard = (user, selectedParroquias = []) => {
         }, 0);
     };
 
-    // Calcular estadísticas por candidato
+    // Calcular estadísticas por candidato (SOLO PARA LOS ÚLTIMOS VOTOS - no se usa más en el Dashboard principal)
+    // Esta función se mantiene para funciones de detalle/debug, pero las estadísticas principales vienen optimizadas
     const getEstadisticasPorCandidato = () => {
+        console.log('⚠️ Usando cálculo legacy - considera usar useEstadisticasOptimizadas');
         const estadisticas = candidatos.map(candidato => {
             let totalVotos = 0;
             let totalActas = 0;

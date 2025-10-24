@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Alert, Table, Modal } from 'react-bootstrap';
 import { useDashboard } from '../hooks/useDashboard';
+import { useEstadisticasOptimizadas } from '../hooks/useEstadisticasOptimizadas';
 import LoadingSpinner from './LoadingSpinner';
 import PortoviejoMap from './PortoviejoMap';
+import ActasPorZona from './ActasPorZona';
 import { db } from '../firebase-config';
 import { doc, updateDoc, collection, getDocs } from 'firebase/firestore';
 
 const Dashboard = ({ user }) => {
-    // Estado para filtro de parroquias seleccionadas en el mapa
+    // Estados para filtros del mapa
     const [selectedParroquias, setSelectedParroquias] = useState([]);
+    const [selectedZonas, setSelectedZonas] = useState([]);
+
+    // Estado para mostrar actas por zona
+    const [mostrarActasPorZona, setMostrarActasPorZona] = useState(false);
 
     // Estados para el modal de edición de votos
     const [modoEdicion, setModoEdicion] = useState(false);
@@ -16,50 +22,49 @@ const Dashboard = ({ user }) => {
     const [guardandoChanges, setGuardandoChanges] = useState(false);
     const [parroquiasData, setParroquiasData] = useState([]);
 
+    // Hook para estadísticas OPTIMIZADAS (lee 1 documento vs 100k votos)
+    const {
+        estadisticas: estadisticasOptimizadas,
+        candidatos: candidatosOptimizados,
+        estadisticasPorParroquia,
+        loading: loadingEstadisticas,
+        error: errorEstadisticas
+    } = useEstadisticasOptimizadas(selectedParroquias);
+
+    // Hook para últimos votos (para mostrar detalle y edición)
     const {
         votos,
-        loading,
-        candidatos,
+        loading: loadingVotos,
         selectedImageIndex,
         setSelectedImageIndex,
         showVotosModal,
         selectedVotoDetalle,
         calcularTotalVotos,
-        getEstadisticasPorCandidato,
         abrirModalVotos,
         cerrarModalVotos,
         siguienteImagen,
         imagenAnterior
     } = useDashboard(user, selectedParroquias);
 
-    const estadisticas = getEstadisticasPorCandidato();
-    const totalVotosGeneral = estadisticas.reduce((sum, candidato) => sum + candidato.totalVotos, 0);
+    // Usar estadísticas optimizadas
+    const estadisticas = candidatosOptimizados;
+    const totalVotosGeneral = estadisticasOptimizadas ?
+        (estadisticasOptimizadas.totalVotosValidos || 0) : 0;
 
-    // Calcular estadísticas adicionales
-    const calcularEstadisticasAdicionales = () => {
-        // Total de sufragantes (suma de todos los totalSufragantes de todas las actas)
-        const totalSufragantes = votos.reduce((sum, voto) => {
-            return sum + (parseInt(voto.totalSufragantes) || 0);
-        }, 0);
-
-        // Actas validadas (revisado === true)
-        const actasValidadas = votos.filter(voto => voto.revisado === true).length;
-
-        // Actas sin validar (revisado === false o no tiene el campo)
-        const actasSinValidar = votos.filter(voto => voto.revisado !== true).length;
-
-        // Total de actas registradas
-        const totalActas = votos.length;
-
-        return {
-            totalSufragantes,
-            actasValidadas,
-            actasSinValidar,
-            totalActas
-        };
+    // Usar estadísticas optimizadas (precalculadas) en lugar de calcularlas manualmente
+    const estadisticasAdicionales = estadisticasOptimizadas ? {
+        totalSufragantes: estadisticasOptimizadas.totalSufragantes || 0,
+        actasValidadas: estadisticasOptimizadas.totalActasRevisadas || 0,
+        actasSinValidar: estadisticasOptimizadas.totalActasNoRevisadas || 0,
+        totalActas: estadisticasOptimizadas.totalActas || 0,
+        porcentajeRevision: estadisticasOptimizadas.porcentajeRevision || 0
+    } : {
+        totalSufragantes: 0,
+        actasValidadas: 0,
+        actasSinValidar: 0,
+        totalActas: 0,
+        porcentajeRevision: 0
     };
-
-    const estadisticasAdicionales = calcularEstadisticasAdicionales();
 
     // Cargar información de parroquias al montar el componente
     useEffect(() => {
@@ -133,8 +138,71 @@ const Dashboard = ({ user }) => {
         });
     };
 
-    if (loading) {
+    // Manejar cambios de zonas seleccionadas
+    const handleZonasSelectionChange = (zonasSeleccionadas) => {
+        setSelectedZonas(zonasSeleccionadas);
+
+        // Mostrar componente de actas si hay una zona específica seleccionada
+        const hayZonaEspecifica = zonasSeleccionadas && zonasSeleccionadas.length > 0 &&
+            !(zonasSeleccionadas.length === 1 && zonasSeleccionadas[0].value === 'all');
+
+        setMostrarActasPorZona(hayZonaEspecifica);
+        console.log('🎯 Dashboard - Zonas seleccionadas:', zonasSeleccionadas);
+    };
+
+    // Manejar selección de acta individual para ver en modal
+    const handleActaSeleccionada = (acta) => {
+        // Reutilizar el modal existente
+        setSelectedVotoDetalle(acta);
+        setShowVotosModal(true);
+        setSelectedImageIndex(0);
+        console.log('📋 Acta seleccionada para modal:', acta);
+    };
+
+    // Obtener información de la zona seleccionada
+    const getZonaSeleccionadaInfo = () => {
+        if (!selectedZonas || selectedZonas.length !== 1 || selectedZonas[0].value === 'all') {
+            return null;
+        }
+
+        const zona = selectedZonas[0];
+        return {
+            codigo: zona.value,
+            nombre: zona.data?.strNombre || zona.label,
+            data: zona.data
+        };
+    };
+
+    // Obtener el parroquiaId real basado en parroquiaIdSvg seleccionada
+    const getParroquiaIdFromSvg = (parroquiaIdSvg) => {
+        if (!parroquiaIdSvg || !parroquiasData || parroquiasData.length === 0) {
+            return null;
+        }
+
+        const parroquia = parroquiasData.find(p => p.id_svg === parroquiaIdSvg);
+        return parroquia?.id || null;
+    };    // Loading state - esperar tanto estadísticas como votos
+    if (loadingEstadisticas || loadingVotos) {
         return <LoadingSpinner message="Cargando resultados electorales..." />;
+    }
+
+    // Error en estadísticas
+    if (errorEstadisticas) {
+        return (
+            <Container className="py-3">
+                <Alert variant="warning">
+                    <Alert.Heading>⚠️ Error de Estadísticas</Alert.Heading>
+                    <p>{errorEstadisticas}</p>
+                    <hr />
+                    <p className="mb-0">
+                        <strong>Posibles soluciones:</strong><br />
+                        • Verifica que la Cloud Function esté desplegada<br />
+                        • Asegúrate de que exista la colección 'estadisticas_totales'<br />
+                        • Revisa los logs de Firebase Functions
+                    </p>
+                </Alert>
+            </Container>
+        );
     }
 
     return (
@@ -147,6 +215,7 @@ const Dashboard = ({ user }) => {
                     <PortoviejoMap
                         onParroquiasSelectionChange={setSelectedParroquias}
                         selectedParroquias={selectedParroquias}
+                        onZonasSelectionChange={handleZonasSelectionChange}
                     />
                 </Col>
 
@@ -154,8 +223,12 @@ const Dashboard = ({ user }) => {
                 <Col lg={4} className="d-flex">
                     <Card className="shadow-sm h-100 w-100">
                         <Card.Body className="p-3 d-flex flex-column h-100">
-                            {/* Estadísticas Electorales - FIJAS (no scrolleable) */}
+                            {/* Estadísticas Electorales - OPTIMIZADAS (precalculadas) */}
                             <div className="mb-3 p-3 bg-light border rounded flex-shrink-0">
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 className="mb-0 text-primary">📊 Estadísticas Generales</h6>
+                                    <Badge bg="success" className="small">⚡ Optimizado</Badge>
+                                </div>
                                 <div className="row g-2 mb-2">
                                     <div className="col-4 text-center">
                                         <div className="fw-bold text-primary">{totalVotosGeneral.toLocaleString()}</div>
@@ -174,7 +247,7 @@ const Dashboard = ({ user }) => {
                                     <div className="col-6 text-center">
                                         <div className="fw-bold text-success">{estadisticasAdicionales.actasValidadas}</div>
                                         <small className="text-muted">
-                                            Validadas ({estadisticasAdicionales.totalActas > 0 ? Math.round((estadisticasAdicionales.actasValidadas / estadisticasAdicionales.totalActas) * 100) : 0}%)
+                                            Validadas ({estadisticasAdicionales.porcentajeRevision}%)
                                         </small>
                                     </div>
                                     <div className="col-6 text-center">
@@ -250,6 +323,21 @@ const Dashboard = ({ user }) => {
                     </Card>
                 </Col>
             </Row>
+
+            {/* Sección de Actas por Zona (solo cuando hay zona específica seleccionada) */}
+            {mostrarActasPorZona && getZonaSeleccionadaInfo() && (
+                <Row className="mb-4">
+                    <Col>
+                        <ActasPorZona
+                            zonaCodigo={getZonaSeleccionadaInfo().codigo}
+                            zonaNombre={getZonaSeleccionadaInfo().nombre}
+                            parroquiaIdSvg={selectedParroquias.length === 1 && selectedParroquias[0] !== 'all' ? selectedParroquias[0] : null}
+                            parroquiaId={selectedParroquias.length === 1 && selectedParroquias[0] !== 'all' ? getParroquiaIdFromSvg(selectedParroquias[0]) : null}
+                            onActaSeleccionada={handleActaSeleccionada}
+                        />
+                    </Col>
+                </Row>
+            )}
 
             {/* Lista de Últimss 10 Actas */}
             <Row className="gx-3">

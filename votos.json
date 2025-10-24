@@ -1,31 +1,42 @@
 [
   {
+    "zonaCodigo": 2,
+    "votosBlancos": 41,
     "genero": "M",
-    "userId": "U73fz9Q4JKWcL735gjrW7aNsE7v2",
-    "parroquiaNombre": "PICOAZA",
+    "revisado": true,
     "votos": [
       {
         "candidatoNombre": "Pincay",
         "candidatoId": 1,
-        "numeroVotos": 1
+        "numeroVotos": 35
       },
       {
         "candidatoNombre": "Dennys",
         "candidatoId": 2,
-        "numeroVotos": 1
+        "numeroVotos": 105
       },
       {
         "candidatoNombre": "Rafael",
         "candidatoId": 3,
-        "numeroVotos": 1
+        "numeroVotos": 89
       }
     ],
-    "circunscripcionCodigo": 1,
-    "parroquiaIdSvg": "jqvmap12_5845",
-    "imageUrls": [],
-    "junta": "2",
-    "timestamp": "2025-10-24 00:40:42.947000+00:00",
-    "parroquiaId": "ZXHRdL7blfwnlDrTYnY9",
-    "id": "mKCxhxqD1FB1XCBXsCbn"
+    "circunscripcionCodigo": 0,
+    "parroquiaIdSvg": "jqvmap12_770",
+    "imageUrls": [
+      "https://firebasestorage.googleapis.com/v0/b/prueba-conteo-votos.firebasestorage.app/o/votos%2FU73fz9Q4JKWcL735gjrW7aNsE7v2_1761326063467_06bde10f-b3d2-4d46-86ad-b31b6d874c8e.jpg?alt=media&token=e6aafee7-7e20-416a-aba7-314f919df81d",
+      "https://firebasestorage.googleapis.com/v0/b/prueba-conteo-votos.firebasestorage.app/o/votos%2FU73fz9Q4JKWcL735gjrW7aNsE7v2_1761326065546_8b55b3c3-9660-4356-9dc6-6993b6e9d19c.jpg?alt=media&token=2f22c911-9511-4e70-8153-b1f54bbb51f1",
+      "https://firebasestorage.googleapis.com/v0/b/prueba-conteo-votos.firebasestorage.app/o/votos%2FU73fz9Q4JKWcL735gjrW7aNsE7v2_1761326067242_83c9a92a-acac-42d9-99cb-f3b8bf21cb5f.jpg?alt=media&token=2b07548e-2079-4f9b-a2a3-6cd6ac79b0e6"
+    ],
+    "fechaUltimaEdicion": "2025-10-24 17:15:28.976000+00:00",
+    "junta": "1",
+    "parroquiaId": "ia7BzPCr92yyCNEygoMt",
+    "votosNulos": 35,
+    "totalSufragantes": 330,
+    "userId": "U73fz9Q4JKWcL735gjrW7aNsE7v2",
+    "zonaNombre": "LOS RANCHOS - ARENALES",
+    "parroquiaNombre": "CRUCITA",
+    "timestamp": "2025-10-24 17:14:28.943000+00:00",
+    "id": "XIvtSroo0hCyB7qO7XTw"
   }
 ]
