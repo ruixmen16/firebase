@@ -3,6 +3,7 @@ import { Tooltip } from 'react-tooltip';
 import Select from 'react-select';
 import { db } from '../firebase-config';
 import { collection, getDocs } from 'firebase/firestore';
+import { useEstadisticasSelects } from '../hooks';
 import './PortoviejoMap.css';
 
 const PortoviejoMap = ({
@@ -15,6 +16,16 @@ const PortoviejoMap = ({
     const [selectedCircunscripcion, setSelectedCircunscripcion] = useState([{ label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' }]);
     const [selectedParroquia, setSelectedParroquia] = useState([{ label: 'TODAS LAS PARROQUIAS', value: 'all' }]);
     const [selectedZona, setSelectedZona] = useState([{ label: 'TODAS LAS ZONAS', value: 'all' }]);
+
+    // Hook para estadísticas de actas en selects
+    const {
+        getActasPorCircunscripcion,
+        getActasPorParroquia,
+        getActasPorZona,
+        getActasParroquiasFiltradas,
+        getActasZonasFiltradas,
+        loading: loadingStats
+    } = useEstadisticasSelects();
     const [activePaths, setActivePaths] = useState([]);
 
     // Mapeo de IDs a nombres de parroquias
@@ -77,8 +88,9 @@ const PortoviejoMap = ({
         const circunscripciones = [...new Set(parroquias.map(p => p.circunscripcion))];
         const options = circunscripciones.map(circ => {
             const codigo = parroquias.find(p => p.circunscripcion === circ)?.intCircunscripcionCodigo;
+            const cantidadActas = getActasPorCircunscripcion(codigo);
             return {
-                label: circ,
+                label: `${circ} (${cantidadActas} actas)`,
                 value: codigo
             };
         });
@@ -97,8 +109,9 @@ const PortoviejoMap = ({
             return options;
         }
 
+        const totalActas = getActasPorCircunscripcion('all');
         return [
-            { label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' },
+            { label: `TODAS LAS CIRCUNSCRIPCIONES (${totalActas} actas)`, value: 'all' },
             ...options
         ];
     };
@@ -123,11 +136,14 @@ const PortoviejoMap = ({
             }
         }
 
-        const options = filteredParroquias.map(p => ({
-            label: p.strNombre,
-            value: p.id_svg || p.strNombre,
-            data: p
-        }));
+        const options = filteredParroquias.map(p => {
+            const cantidadActas = getActasPorParroquia(p.id_svg || p.strNombre);
+            return {
+                label: `${p.strNombre} (${cantidadActas} actas)`,
+                value: p.id_svg || p.strNombre,
+                data: p
+            };
+        });
 
         // Verificar si todas las parroquias individuales están seleccionadas
         const selectedIndividualParroquias = selectedParroquia
@@ -143,11 +159,15 @@ const PortoviejoMap = ({
             return options;
         }
 
+        const totalActas = esCircunscripcionTodas
+            ? getActasPorParroquia('all')
+            : getActasParroquiasFiltradas(parroquias, selectedCircunscripcion);
+
         return [
             {
                 label: esCircunscripcionTodas
-                    ? 'TODAS LAS PARROQUIAS'
-                    : 'TODAS LAS PARROQUIAS (DE CIRCUNSCRIPCIONES SELECCIONADAS)',
+                    ? `TODAS LAS PARROQUIAS (${totalActas} actas)`
+                    : `TODAS LAS PARROQUIAS DE SELECCIÓN (${totalActas} actas)`,
                 value: 'all'
             },
             ...options
@@ -197,12 +217,15 @@ const PortoviejoMap = ({
             return acc;
         }, {});
 
-        const options = Object.values(zonasUnicas).map(zona => ({
-            // Mostrar solo el nombre en la etiqueta (sin código)
-            label: zona.strNombre,
-            value: zona.intCodigo,
-            data: zona
-        }));
+        const options = Object.values(zonasUnicas).map(zona => {
+            const cantidadActas = getActasPorZona(zona.intCodigo);
+            return {
+                // Mostrar solo el nombre en la etiqueta (sin código) + cantidad de actas
+                label: `${zona.strNombre} (${cantidadActas} actas)`,
+                value: zona.intCodigo,
+                data: zona
+            };
+        });
 
         // Verificar si todas las zonas individuales están seleccionadas
         const selectedIndividualZonas = selectedZona
@@ -217,11 +240,15 @@ const PortoviejoMap = ({
             return options;
         }
 
+        const totalActas = esParroquiaTodas
+            ? getActasPorZona('all')
+            : getActasZonasFiltradas(parroquias, selectedParroquia);
+
         return [
             {
                 label: esParroquiaTodas
-                    ? 'TODAS LAS ZONAS'
-                    : 'TODAS LAS ZONAS (DE PARROQUIAS SELECCIONADAS)',
+                    ? `TODAS LAS ZONAS (${totalActas} actas)`
+                    : `TODAS LAS ZONAS DE SELECCIÓN (${totalActas} actas)`,
                 value: 'all'
             },
             ...options
