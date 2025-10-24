@@ -70,7 +70,7 @@ exports.actualizarEstadisticas = onDocumentWritten('votos/{votoId}', async (even
                 // Procesar votos por candidato
                 if (datosNuevos.votos && Array.isArray(datosNuevos.votos)) {
                     datosNuevos.votos.forEach(voto => {
-                        deltaCandidatos[voto.candidatoId] = (deltaCandidatos[voto.candidatoId] || 0) + voto.numeroVotos;
+                        deltaCandidatos[voto.candidatoId] = (deltaCandidatos[voto.candidatoId] || 0) + (parseInt(voto.numeroVotos) || 0);
                     });
                 }
 
@@ -132,7 +132,7 @@ exports.actualizarEstadisticas = onDocumentWritten('votos/{votoId}', async (even
                 // Restar votos por candidato
                 if (datosAntes.votos && Array.isArray(datosAntes.votos)) {
                     datosAntes.votos.forEach(voto => {
-                        deltaCandidatos[voto.candidatoId] = (deltaCandidatos[voto.candidatoId] || 0) - voto.numeroVotos;
+                        deltaCandidatos[voto.candidatoId] = (deltaCandidatos[voto.candidatoId] || 0) - (parseInt(voto.numeroVotos) || 0);
                     });
                 }
 
@@ -207,13 +207,13 @@ exports.actualizarEstadisticas = onDocumentWritten('votos/{votoId}', async (even
 
                 if (datosAntes.votos) {
                     datosAntes.votos.forEach(voto => {
-                        votosAntesMap[voto.candidatoId] = voto.numeroVotos;
+                        votosAntesMap[voto.candidatoId] = parseInt(voto.numeroVotos) || 0;
                     });
                 }
 
                 if (datosNuevos.votos) {
                     datosNuevos.votos.forEach(voto => {
-                        votosNuevosMap[voto.candidatoId] = voto.numeroVotos;
+                        votosNuevosMap[voto.candidatoId] = parseInt(voto.numeroVotos) || 0;
                     });
                 }
 
@@ -437,6 +437,8 @@ exports.actualizarEstadisticas = onDocumentWritten('votos/{votoId}', async (even
             // Actualizar estadísticas por zona
             const votosPorZona = { ...estadisticas.votosPorZona };
             Object.entries(deltaZonas).forEach(([zonaKey, delta]) => {
+                console.log(`🔍 Procesando zona ${zonaKey}:`, delta);
+
                 if (!votosPorZona[zonaKey]) {
                     votosPorZona[zonaKey] = {
                         nombre: delta.nombre,
@@ -448,18 +450,24 @@ exports.actualizarEstadisticas = onDocumentWritten('votos/{votoId}', async (even
                         sufragantes: 0,
                         actas: 0,
                         actasRevisadas: 0,
-                        actasNoRevisadas: 0
+                        actasNoRevisadas: 0,
+                        porcentajeRevision: 0
                     };
                 }
+
                 // Actualizar valores
                 if (delta.parroquiaIdSvg) {
                     votosPorZona[zonaKey].parroquiaIdSvg = delta.parroquiaIdSvg;
                 }
+
+                const antesTotalVotos = votosPorZona[zonaKey].totalVotos;
                 votosPorZona[zonaKey].totalVotos += delta.totalVotos;
                 votosPorZona[zonaKey].sufragantes += delta.sufragantes;
                 votosPorZona[zonaKey].actas += delta.actas;
                 votosPorZona[zonaKey].actasRevisadas += delta.actasRevisadas || 0;
                 votosPorZona[zonaKey].actasNoRevisadas += delta.actasNoRevisadas || 0;
+
+                console.log(`📊 Zona ${zonaKey}: ${antesTotalVotos} + ${delta.totalVotos} = ${votosPorZona[zonaKey].totalVotos}`);
 
                 // Calcular porcentaje de revisión por zona
                 const totalActasZona = votosPorZona[zonaKey].actas;
@@ -471,6 +479,14 @@ exports.actualizarEstadisticas = onDocumentWritten('votos/{votoId}', async (even
             // Calcular total de votos válidos
             nuevasEstadisticas.totalVotosValidos = Object.values(votosPorCandidato)
                 .reduce((total, candidato) => total + candidato.votos, 0);
+
+            // Log para debug
+            console.log('🔍 DEBUG - Deltas calculados:', {
+                deltaZonas: Object.keys(deltaZonas),
+                deltaParroquias: Object.keys(deltaParroquias),
+                deltaCandidatos: Object.keys(deltaCandidatos),
+                totalVotosValidos: nuevasEstadisticas.totalVotosValidos
+            });
 
             transaction.update(estadisticasRef, nuevasEstadisticas);
         });
@@ -484,10 +500,19 @@ exports.actualizarEstadisticas = onDocumentWritten('votos/{votoId}', async (even
 
 // Funciones auxiliares
 function calcularTotalVotos(voto) {
-    let total = (voto.votosBlancos || 0) + (voto.votosNulos || 0);
+    // Solo contar votos de candidatos (votos válidos)
+    let total = 0;
     if (voto.votos && Array.isArray(voto.votos)) {
-        total += voto.votos.reduce((sum, v) => sum + v.numeroVotos, 0);
+        total = voto.votos.reduce((sum, v) => sum + (parseInt(v.numeroVotos) || 0), 0);
     }
+    return total;
+}
+
+function calcularTotalVotosCompleto(voto) {
+    // Incluye votos válidos + blancos + nulos (total general)
+    let total = calcularTotalVotos(voto);
+    total += (parseInt(voto.votosBlancos) || 0);
+    total += (parseInt(voto.votosNulos) || 0);
     return total;
 }
 

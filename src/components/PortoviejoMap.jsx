@@ -198,7 +198,8 @@ const PortoviejoMap = ({
         }, {});
 
         const options = Object.values(zonasUnicas).map(zona => ({
-            label: `${zona.strNombre} (Código: ${zona.intCodigo})`,
+            // Mostrar solo el nombre en la etiqueta (sin código)
+            label: zona.strNombre,
             value: zona.intCodigo,
             data: zona
         }));
@@ -559,11 +560,32 @@ const PortoviejoMap = ({
                         styles={{
                             control: (base) => ({
                                 ...base,
+                                minHeight: 42,
+                                height: 42,
                                 borderColor: '#007bff',
                                 boxShadow: 'none',
                                 '&:hover': {
                                     borderColor: '#0056b3'
                                 }
+                            }),
+                            valueContainer: (base) => ({
+                                ...base,
+                                padding: '2px 8px',
+                                flexWrap: 'nowrap'
+                            }),
+                            multiValue: (base) => ({
+                                ...base,
+                                maxWidth: '100%'
+                            }),
+                            multiValueLabel: (base) => ({
+                                ...base,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }),
+                            indicatorsContainer: (base) => ({
+                                ...base,
+                                height: 42
                             }),
                             option: (base, state) => ({
                                 ...base,
@@ -595,11 +617,32 @@ const PortoviejoMap = ({
                         styles={{
                             control: (base) => ({
                                 ...base,
+                                minHeight: 42,
+                                height: 42,
                                 borderColor: '#007bff',
                                 boxShadow: 'none',
                                 '&:hover': {
                                     borderColor: '#0056b3'
                                 }
+                            }),
+                            valueContainer: (base) => ({
+                                ...base,
+                                padding: '2px 8px',
+                                flexWrap: 'nowrap'
+                            }),
+                            multiValue: (base) => ({
+                                ...base,
+                                maxWidth: '100%'
+                            }),
+                            multiValueLabel: (base) => ({
+                                ...base,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }),
+                            indicatorsContainer: (base) => ({
+                                ...base,
+                                height: 42
                             }),
                             option: (base, state) => ({
                                 ...base,
@@ -632,11 +675,32 @@ const PortoviejoMap = ({
                         styles={{
                             control: (base) => ({
                                 ...base,
+                                minHeight: 42,
+                                height: 42,
                                 borderColor: '#28a745',
                                 boxShadow: 'none',
                                 '&:hover': {
                                     borderColor: '#1e7e34'
                                 }
+                            }),
+                            valueContainer: (base) => ({
+                                ...base,
+                                padding: '2px 8px',
+                                flexWrap: 'nowrap'
+                            }),
+                            multiValue: (base) => ({
+                                ...base,
+                                maxWidth: '100%'
+                            }),
+                            multiValueLabel: (base) => ({
+                                ...base,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }),
+                            indicatorsContainer: (base) => ({
+                                ...base,
+                                height: 42
                             }),
                             option: (base, state) => ({
                                 ...base,
@@ -991,19 +1055,7 @@ const PortoviejoMap = ({
                 </svg>
             </div>
 
-            <div className="map-legend">
-                <h6><i className="fas fa-info-circle me-2"></i>Leyenda:</h6>
-                <div className="legend-items">
-                    <div className="legend-item">
-                        <div className="legend-color" style={{ backgroundColor: '#a6c1ff' }}></div>
-                        <span>Parroquia Normal</span>
-                    </div>
-                    <div className="legend-item">
-                        <div className="legend-color" style={{ backgroundColor: '#007bff' }}></div>
-                        <span>Parroquia Seleccionada</span>
-                    </div>
-                </div>
-            </div>
+
 
             {/* React Tooltip Component */}
             <Tooltip

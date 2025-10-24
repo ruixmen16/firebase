@@ -54,7 +54,21 @@ export const useEstadisticasPorZona = (zonaCodigo, parroquiaId = null) => {
 
                     if (zonaEncontrada) {
                         console.log('✅ Estadísticas de zona encontradas (OPTIMIZADAS):', zonaEncontrada);
-                        setEstadisticasZona(zonaEncontrada);
+
+                        // Normalizar estructura de datos para compatibilidad
+                        const estadisticasNormalizadas = {
+                            totalVotos: zonaEncontrada.totalVotos || zonaEncontrada.votos || 0,
+                            totalSufragantes: zonaEncontrada.totalSufragantes || zonaEncontrada.sufragantes || 0,
+                            actasRevisadas: zonaEncontrada.actasRevisadas || zonaEncontrada.actasValidadas || 0,
+                            actasNoRevisadas: zonaEncontrada.actasNoRevisadas || zonaEncontrada.actasPendientes || 0,
+                            totalActas: zonaEncontrada.totalActas || zonaEncontrada.actas || 0,
+                            porcentajeRevision: zonaEncontrada.porcentajeRevision || 0,
+                            nombre: zonaEncontrada.nombre || `Zona ${zonaCodigo}`,
+                            codigo: zonaEncontrada.codigo || parseInt(zonaCodigo)
+                        };
+
+                        console.log('📊 Estadísticas normalizadas:', estadisticasNormalizadas);
+                        setEstadisticasZona(estadisticasNormalizadas);
                         setError(null);
                     } else {
                         console.log(`⚠️ No se encontraron estadísticas para zona ${zonaCodigo}`);
@@ -71,8 +85,18 @@ export const useEstadisticasPorZona = (zonaCodigo, parroquiaId = null) => {
                         setError(null);
                     }
                 } else {
-                    console.log('⚠️ No existe el documento de estadísticas');
-                    setError('No se encontraron estadísticas. Asegúrate de que la Cloud Function esté funcionando.');
+                    console.log('⚠️ No existe el documento de estadísticas - mostrando valores en cero');
+                    setEstadisticasZona({
+                        nombre: `Zona ${zonaCodigo}`,
+                        codigo: parseInt(zonaCodigo),
+                        totalVotos: 0,
+                        totalSufragantes: 0,
+                        totalActas: 0,
+                        actasRevisadas: 0,
+                        actasNoRevisadas: 0,
+                        porcentajeRevision: 0
+                    });
+                    setError(null);
                 }
                 setLoading(false);
             },

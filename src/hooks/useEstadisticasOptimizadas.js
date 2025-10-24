@@ -30,9 +30,24 @@ export const useEstadisticasOptimizadas = (selectedParroquias = []) => {
                     setEstadisticas(data);
                     setError(null);
                 } else {
-                    console.log('⚠️ No existe el documento de estadísticas');
-                    setEstadisticas(null);
-                    setError('No se encontraron estadísticas. Asegúrate de que la Cloud Function esté funcionando.');
+                    console.log('⚠️ No existe el documento de estadísticas - usando valores por defecto en cero');
+                    // Crear estadísticas vacías en lugar de mostrar error
+                    const estadisticasVacias = {
+                        totalActas: 0,
+                        totalActasRevisadas: 0,
+                        totalActasNoRevisadas: 0,
+                        totalSufragantes: 0,
+                        totalVotosBlancos: 0,
+                        totalVotosNulos: 0,
+                        totalVotosValidos: 0,
+                        porcentajeRevision: 0,
+                        votosPorCandidato: {},
+                        votosPorParroquia: {},
+                        votosPorCircunscripcion: {},
+                        votosPorZona: {}
+                    };
+                    setEstadisticas(estadisticasVacias);
+                    setError(null);
                 }
                 setLoading(false);
             },
@@ -51,7 +66,20 @@ export const useEstadisticasOptimizadas = (selectedParroquias = []) => {
 
     // Función para obtener estadísticas filtradas por parroquias seleccionadas
     const getEstadisticasFiltradas = () => {
-        if (!estadisticas) return null;
+        if (!estadisticas) {
+            // Retornar estadísticas vacías si no hay datos
+            return {
+                totalActas: 0,
+                totalSufragantes: 0,
+                totalVotosBlancos: 0,
+                totalVotosNulos: 0,
+                totalVotosValidos: 0,
+                totalActasRevisadas: 0,
+                totalActasNoRevisadas: 0,
+                porcentajeRevision: 0,
+                votosPorCandidato: {}
+            };
+        }
 
         // Si no hay filtro, retornar estadísticas globales
         if (!selectedParroquias || selectedParroquias.length === 0) {
