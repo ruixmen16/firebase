@@ -5,11 +5,11 @@ import { db } from '../firebase-config';
 import { collection, getDocs } from 'firebase/firestore';
 import './PortoviejoMap.css';
 
-const PortoviejoMap = () => {
+const PortoviejoMap = ({ onParroquiasSelectionChange, selectedParroquias = [] }) => {
     const [hoveredParish, setHoveredParish] = useState(null);
     const [parroquias, setParroquias] = useState([]);
-    const [selectedCircunscripcion, setSelectedCircunscripcion] = useState(null);
-    const [selectedParroquia, setSelectedParroquia] = useState(null);
+    const [selectedCircunscripcion, setSelectedCircunscripcion] = useState([{ label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' }]);
+    const [selectedParroquia, setSelectedParroquia] = useState([{ label: 'TODAS LAS PARROQUIAS', value: 'all' }]);
     const [activePaths, setActivePaths] = useState([]);
 
     // Mapeo de IDs a nombres de parroquias
@@ -46,6 +46,19 @@ const PortoviejoMap = () => {
                     ...doc.data()
                 }));
                 setParroquias(parroquiasData);
+
+                // Inicializar todos los paths como seleccionados
+                const todosLosPaths = Object.keys(parishNames);
+                setActivePaths(todosLosPaths);
+
+                // Inicializar los selectores en "TODAS"
+                setSelectedCircunscripcion([{ label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' }]);
+                setSelectedParroquia([{ label: 'TODAS LAS PARROQUIAS', value: 'all' }]);
+
+                // Notificar al Dashboard que todos están seleccionados inicialmente (array vacío = todas)
+                if (onParroquiasSelectionChange) {
+                    onParroquiasSelectionChange([]); // Array vacío = mostrar todas
+                }
             } catch (error) {
                 console.error('Error cargando parroquias:', error);
             }
@@ -63,6 +76,21 @@ const PortoviejoMap = () => {
                 value: codigo
             };
         });
+
+        // Verificar si todos los elementos individuales están seleccionados
+        const selectedIndividualCodes = selectedCircunscripcion
+            ?.filter(s => s.value !== 'all')
+            .map(s => s.value) || [];
+
+        const allIndividualCodes = options.map(opt => opt.value);
+        const todasLasIndividualesSeleccionadas = allIndividualCodes.length > 0 &&
+            allIndividualCodes.every(code => selectedIndividualCodes.includes(code));
+
+        // Si todas las individuales están seleccionadas, no mostrar "TODAS"
+        if (todasLasIndividualesSeleccionadas) {
+            return options;
+        }
+
         return [
             { label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' },
             ...options
@@ -73,10 +101,20 @@ const PortoviejoMap = () => {
     const getParroquiaOptions = () => {
         let filteredParroquias = parroquias;
 
-        if (selectedCircunscripcion && selectedCircunscripcion.value !== 'all') {
-            filteredParroquias = parroquias.filter(p =>
-                p.intCircunscripcionCodigo === selectedCircunscripcion.value
-            );
+        // Filtrar por circunscripciones seleccionadas (multi-select)
+        const esCircunscripcionTodas = !selectedCircunscripcion || selectedCircunscripcion.length === 0 ||
+            (selectedCircunscripcion.length === 1 && selectedCircunscripcion[0].value === 'all');
+
+        if (!esCircunscripcionTodas) {
+            const codigosSeleccionados = selectedCircunscripcion
+                .filter(c => c.value !== 'all')
+                .map(c => c.value);
+
+            if (codigosSeleccionados.length > 0) {
+                filteredParroquias = parroquias.filter(p =>
+                    codigosSeleccionados.includes(p.intCircunscripcionCodigo)
+                );
+            }
         }
 
         const options = filteredParroquias.map(p => ({
@@ -85,51 +123,194 @@ const PortoviejoMap = () => {
             data: p
         }));
 
+        // Verificar si todas las parroquias individuales están seleccionadas
+        const selectedIndividualParroquias = selectedParroquia
+            ?.filter(s => s.value !== 'all')
+            .map(s => s.value) || [];
+
+        const allIndividualParroquias = options.map(opt => opt.value);
+        const todasLasIndividualesSeleccionadas = allIndividualParroquias.length > 0 &&
+            allIndividualParroquias.every(value => selectedIndividualParroquias.includes(value));
+
+        // Si todas las individuales están seleccionadas, no mostrar "TODAS"
+        if (todasLasIndividualesSeleccionadas) {
+            return options;
+        }
+
         return [
             {
-                label: selectedCircunscripcion && selectedCircunscripcion.value !== 'all'
-                    ? 'TODAS LAS PARROQUIAS (DE ESTA CIRCUNSCRIPCIÓN)'
-                    : 'TODAS LAS PARROQUIAS',
+                label: esCircunscripcionTodas
+                    ? 'TODAS LAS PARROQUIAS'
+                    : 'TODAS LAS PARROQUIAS (DE CIRCUNSCRIPCIONES SELECCIONADAS)',
                 value: 'all'
             },
             ...options
         ];
     };
 
-    // Manejar cambio de circunscripción
-    const handleCircunscripcionChange = (selectedOption) => {
-        setSelectedCircunscripcion(selectedOption);
-        setSelectedParroquia(null); // Reset parroquia selection
-        updateActivePaths(selectedOption, null);
-    };
+    // Función helper para manejar lógica exclusiva "TODAS" vs específicas
+    const handleExclusiveSelection = (selectedOptions, allValue = 'all', availableOptions = []) => {
+        if (!selectedOptions || selectedOptions.length === 0) {
+            return [];
+        }
 
-    // Manejar cambio de parroquia
-    const handleParroquiaChange = (selectedOption) => {
-        setSelectedParroquia(selectedOption);
-        updateActivePaths(selectedCircunscripcion, selectedOption);
-    };
+        const hasAll = selectedOptions.some(option => option.value === allValue);
+        const specificOptions = selectedOptions.filter(option => option.value !== allValue);
 
-    // Actualizar paths activos basado en selecciones
-    const updateActivePaths = (circunscripcion, parroquia) => {
-        if (!parroquia || parroquia.value === 'all') {
-            // Mostrar todas las parroquias de la circunscripción seleccionada
-            if (!circunscripcion || circunscripcion.value === 'all') {
-                // Todas las parroquias
-                const allPaths = parroquias.map(p => p.id_svg).filter(Boolean);
-                setActivePaths(allPaths);
+        // Si se seleccionó "TODAS" y hay opciones específicas
+        if (hasAll && specificOptions.length > 0) {
+            // Determinar cuál fue la última selección basándose en el orden
+            const lastSelected = selectedOptions[selectedOptions.length - 1];
+
+            if (lastSelected.value === allValue) {
+                // Si "TODAS" fue lo último seleccionado, mantener solo "TODAS"
+                return selectedOptions.filter(option => option.value === allValue);
             } else {
-                // Todas las parroquias de la circunscripción seleccionada
-                const filteredPaths = parroquias
-                    .filter(p => p.intCircunscripcionCodigo === circunscripcion.value)
-                    .map(p => p.id_svg)
-                    .filter(Boolean);
-                setActivePaths(filteredPaths);
+                // Si una opción específica fue lo último, mantener solo las específicas
+                return specificOptions;
             }
+        }
+
+        // Verificar si se han seleccionado todos los elementos individuales
+        if (!hasAll && availableOptions.length > 0) {
+            const allIndividualValues = availableOptions
+                .filter(opt => opt.value !== allValue)
+                .map(opt => opt.value);
+
+            const selectedIndividualValues = specificOptions.map(opt => opt.value);
+
+            // Si todos los individuales están seleccionados, convertir automáticamente a "TODAS"
+            if (allIndividualValues.length > 0 &&
+                allIndividualValues.every(value => selectedIndividualValues.includes(value))) {
+
+                const allOption = availableOptions.find(opt => opt.value === allValue);
+                return allOption ? [allOption] : selectedOptions;
+            }
+        }
+
+        // En caso contrario, mantener la selección actual
+        return selectedOptions;
+    };    // Manejar cambio de circunscripción (multi-select)
+    const handleCircunscripcionChange = (selectedOptions) => {
+        // Aplicar lógica exclusiva pasando las opciones disponibles
+        const availableOptions = getCircunscripcionOptions();
+        const processedOptions = handleExclusiveSelection(selectedOptions, 'all', availableOptions);
+        setSelectedCircunscripcion(processedOptions);
+
+        // Calcular las nuevas parroquias que se van a establecer
+        const nuevasParroquias = calcularParroquiasFromCircunscripciones(processedOptions);
+
+        // Actualizar las parroquias seleccionadas
+        setSelectedParroquia(nuevasParroquias);
+
+        // Actualizar el filtro con las nuevas parroquias calculadas
+        updateFilterFromSelectors(processedOptions, nuevasParroquias);
+    };
+
+    // Manejar cambio de parroquia (multi-select)
+    const handleParroquiaChange = (selectedOptions) => {
+        // Aplicar lógica exclusiva pasando las opciones disponibles
+        const availableOptions = getParroquiaOptions();
+        const processedOptions = handleExclusiveSelection(selectedOptions, 'all', availableOptions);
+        setSelectedParroquia(processedOptions);
+
+        // Actualizar el filtro
+        updateFilterFromSelectors(selectedCircunscripcion, processedOptions);
+    };
+
+    // Calcular parroquias basándose en circunscripciones (función pura)
+    const calcularParroquiasFromCircunscripciones = (circunscripciones) => {
+        if (!circunscripciones || circunscripciones.length === 0) {
+            // Si no hay circunscripciones seleccionadas → limpiar parroquias también
+            return [];
+        } else if (circunscripciones.length === 1 && circunscripciones[0].value === 'all') {
+            // Si "TODAS" las circunscripciones → "TODAS" las parroquias
+            return [{ label: 'TODAS LAS PARROQUIAS', value: 'all' }];
         } else {
-            // Mostrar solo la parroquia seleccionada
-            setActivePaths([parroquia.value]);
+            // Filtrar parroquias de las circunscripciones seleccionadas
+            const codigosCircunscripcion = circunscripciones
+                .filter(c => c.value !== 'all')
+                .map(c => c.value);
+
+            if (codigosCircunscripcion.length > 0) {
+                const parroquiasFiltradas = parroquias
+                    .filter(p => codigosCircunscripcion.includes(p.intCircunscripcionCodigo))
+                    .map(p => ({
+                        label: p.strNombre,
+                        value: p.id_svg || p.strNombre,
+                        data: p
+                    }));
+
+                return parroquiasFiltradas;
+            } else {
+                // Si no hay códigos válidos, limpiar parroquias
+                return [];
+            }
         }
     };
+
+    // Actualizar parroquias cuando cambian las circunscripciones (wrapper)
+    const updateParroquiasFromCircunscripciones = (circunscripciones) => {
+        const nuevasParroquias = calcularParroquiasFromCircunscripciones(circunscripciones);
+        setSelectedParroquia(nuevasParroquias);
+    };    // Actualizar el filtro basándose en los selectores
+    const updateFilterFromSelectors = (circunscripciones, parroquias_select) => {
+        // Determinar qué parroquias están seleccionadas
+        let pathsParaFiltro = [];
+
+        const circunscripcionVacia = !circunscripciones || circunscripciones.length === 0;
+        const circunscripcionTodas = circunscripciones && circunscripciones.length === 1 && circunscripciones[0].value === 'all';
+
+        const parroquiaVacia = !parroquias_select || parroquias_select.length === 0;
+        const parroquiaTodas = parroquias_select && parroquias_select.length === 1 && parroquias_select[0].value === 'all';
+
+        // Lógica estricta:
+        if (circunscripcionVacia || parroquiaVacia) {
+            // Si cualquier selector está vacío → NO mostrar votos
+            pathsParaFiltro = ['FILTRO_VACIO']; // Valor especial que significa "no mostrar nada"
+        } else if (circunscripcionTodas && parroquiaTodas) {
+            // Solo si AMBOS están explícitamente en "TODAS" → mostrar todos
+            pathsParaFiltro = []; // Array vacío = sin filtro (mostrar todos)
+        } else if (!parroquiaVacia && !parroquiaTodas) {
+            // Hay parroquias específicas seleccionadas
+            pathsParaFiltro = parroquias_select
+                .filter(p => p.value !== 'all')
+                .map(p => p.value);
+        } else if (!circunscripcionVacia && !circunscripcionTodas) {
+            // Solo circunscripciones específicas seleccionadas, todas sus parroquias
+            const codigosCircunscripcion = circunscripciones
+                .filter(c => c.value !== 'all')
+                .map(c => c.value);
+
+            if (codigosCircunscripcion.length > 0) {
+                pathsParaFiltro = parroquias
+                    .filter(p => codigosCircunscripcion.includes(p.intCircunscripcionCodigo))
+                    .map(p => p.id_svg)
+                    .filter(Boolean);
+            } else {
+                pathsParaFiltro = ['FILTRO_VACIO'];
+            }
+        } else {
+            // Caso por defecto: no mostrar nada
+            pathsParaFiltro = ['FILTRO_VACIO'];
+        }
+
+        // Notificar al Dashboard
+        if (onParroquiasSelectionChange) {
+            onParroquiasSelectionChange(pathsParaFiltro);
+        }
+
+        console.log('🔍 Filtro actualizado:', {
+            circunscripciones,
+            circunscripcionVacia, circunscripcionTodas,
+            parroquias_select,
+            parroquiaVacia, parroquiaTodas,
+            pathsParaFiltro,
+            selectedParroquiasActuales: selectedParroquias
+        });
+    };
+
+
 
     const handleMouseEnter = (parishId) => {
         setHoveredParish(parishId);
@@ -141,15 +322,104 @@ const PortoviejoMap = () => {
 
     const handleParishClick = (parishId) => {
         const parishName = parishNames[parishId] || 'Parroquia Desconocida';
-        alert(`Has seleccionado: ${parishName}`);
+
+        // Manejar selección múltiple
+        let nuevasParroquiasSeleccionadas = [...selectedParroquias];
+
+        if (selectedParroquias.includes(parishId)) {
+            // Si ya está seleccionada, la removemos
+            nuevasParroquiasSeleccionadas = selectedParroquias.filter(id => id !== parishId);
+        } else {
+            // Si no está seleccionada, la agregamos
+            nuevasParroquiasSeleccionadas.push(parishId);
+        }
+
+        // Auto-actualizar los selectores multi-select
+        updateSelectorsFromSelection(nuevasParroquiasSeleccionadas);
+
+        // Notificar al componente padre (Dashboard)
+        if (onParroquiasSelectionChange) {
+            onParroquiasSelectionChange(nuevasParroquiasSeleccionadas);
+        }
+
+        console.log(`Parroquia ${parishName} - Seleccionadas: ${nuevasParroquiasSeleccionadas.length}`);
+    };
+
+    // Función para actualizar los selectores basándose en las parroquias seleccionadas
+    const updateSelectorsFromSelection = (parroquiasSeleccionadas) => {
+        if (parroquiasSeleccionadas.length === 0) {
+            // Si no hay nada seleccionado, volver a "TODAS"
+            setSelectedCircunscripcion([{ label: 'TODAS LAS CIRCUNSCRIPCIONES', value: 'all' }]);
+            setSelectedParroquia([{ label: 'TODAS LAS PARROQUIAS', value: 'all' }]);
+            return;
+        }
+
+        // Obtener datos de las parroquias seleccionadas
+        const datosParroquiasSeleccionadas = parroquiasSeleccionadas
+            .map(pathId => parroquias.find(p => p.id_svg === pathId))
+            .filter(Boolean);
+
+        // Obtener circunscripciones únicas de las parroquias seleccionadas
+        const circunscripcionesUnicas = [...new Set(
+            datosParroquiasSeleccionadas.map(p => p.intCircunscripcionCodigo)
+        )];
+
+        // Actualizar selector de circunscripciones
+        const opcionesCircunscripcion = circunscripcionesUnicas.map(codigo => {
+            const parroquia = datosParroquiasSeleccionadas.find(p => p.intCircunscripcionCodigo === codigo);
+            return {
+                label: parroquia.circunscripcion,
+                value: codigo
+            };
+        });
+        setSelectedCircunscripcion(opcionesCircunscripcion);
+
+        // Actualizar selector de parroquias
+        const opcionesParroquia = datosParroquiasSeleccionadas.map(p => ({
+            label: p.strNombre,
+            value: p.id_svg || p.strNombre,
+            data: p
+        }));
+        setSelectedParroquia(opcionesParroquia);
+
+        console.log(`🎯 Auto-seleccionado: ${circunscripcionesUnicas.length} circunscripción(es) y ${parroquiasSeleccionadas.length} parroquia(s)`);
     };
 
     // Helper function para determinar el color de fill de un path
     const getPathFill = (pathId) => {
-        return activePaths.includes(pathId) || hoveredParish === pathId
-            ? '#007bff'
-            : '#a6c1ff';
+        // Hover (cursor) siempre tiene prioridad máxima
+        if (hoveredParish === pathId) {
+            return '#007bff'; // Azul oscuro para hover
+        }
+
+        // Considerar el caso "todas seleccionadas":
+        const isEverythingSelected =
+            (!selectedParroquias || selectedParroquias.length === 0) &&
+            selectedCircunscripcion && selectedCircunscripcion.length === 1 && selectedCircunscripcion[0].value === 'all' &&
+            selectedParroquia && selectedParroquia.length === 1 && selectedParroquia[0].value === 'all';
+
+        // Si todo está seleccionado, todos son verdes (excepto hover)
+        if (isEverythingSelected) {
+            return '#28a745'; // Verde para todas seleccionadas
+        }
+
+        // Parroquia seleccionada explícitamente por clic (filtro activo)
+        if (selectedParroquias && selectedParroquias.includes(pathId)) {
+            return '#28a745'; // Verde para seleccionadas por clic
+        }
+
+        // Color por defecto (normal)
+        return '#a6c1ff'; // Azul claro para parroquias normales
     };
+
+    // Calcular si está todo seleccionado y número mostrado en el indicador
+    const isAllSelected = (!selectedParroquias || selectedParroquias.length === 0) &&
+        selectedCircunscripcion && selectedCircunscripcion.length === 1 && selectedCircunscripcion[0].value === 'all' &&
+        selectedParroquia && selectedParroquia.length === 1 && selectedParroquia[0].value === 'all';
+
+    const selectedCount = (selectedParroquias && selectedParroquias.length > 0)
+        ? selectedParroquias.length
+        : Object.keys(parishNames).length;
 
     return (
         <div className="portoviejo-map-container">
@@ -187,6 +457,8 @@ const PortoviejoMap = () => {
                         options={getCircunscripcionOptions()}
                         placeholder="Seleccionar circunscripción..."
                         isSearchable={false}
+                        isMulti={true}
+                        closeMenuOnSelect={false}
                         styles={{
                             control: (base) => ({
                                 ...base,
@@ -220,7 +492,9 @@ const PortoviejoMap = () => {
                         options={getParroquiaOptions()}
                         placeholder="Seleccionar parroquia..."
                         isSearchable={true}
-                        isDisabled={!selectedCircunscripcion}
+                        isDisabled={!selectedCircunscripcion || selectedCircunscripcion.length === 0}
+                        isMulti={true}
+                        closeMenuOnSelect={false}
                         styles={{
                             control: (base) => ({
                                 ...base,
@@ -237,6 +511,51 @@ const PortoviejoMap = () => {
                             })
                         }}
                     />
+                </div>
+            </div>
+
+
+
+            {/* Leyenda de colores */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '2rem',
+                marginBottom: '1rem',
+                padding: '0.5rem',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '0.375rem',
+                fontSize: '0.8rem'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: '#28a745',
+                        borderRadius: '3px',
+                        border: '1px solid #ccc'
+                    }}></div>
+                    <span>Seleccionada (filtro)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: '#007bff',
+                        borderRadius: '3px',
+                        border: '1px solid #ccc'
+                    }}></div>
+                    <span>Hover</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: '#a6c1ff',
+                        borderRadius: '3px',
+                        border: '1px solid #ccc'
+                    }}></div>
+                    <span>Normal</span>
                 </div>
             </div>
 

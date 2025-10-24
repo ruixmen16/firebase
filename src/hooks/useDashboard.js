@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { db } from '../firebase-config';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 
-export const useDashboard = (user) => {
+export const useDashboard = (user, selectedParroquias = []) => {
     const [votos, setVotos] = useState([]);
+    const [votosOriginales, setVotosOriginales] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedVoto, setSelectedVoto] = useState(null);
     const [showImageModal, setShowImageModal] = useState(false);
@@ -40,7 +41,8 @@ export const useDashboard = (user) => {
                 querySnapshot.forEach((doc) => {
                     votosData.push({ id: doc.id, ...doc.data() });
                 });
-                setVotos(votosData);
+                setVotosOriginales(votosData);
+                setVotos(votosData); // Inicialmente todos los votos
                 setLoading(false);
             }, (error) => {
                 console.error("Error al cargar votos:", error);
@@ -50,6 +52,38 @@ export const useDashboard = (user) => {
             return () => unsubscribe();
         }
     }, [user]);
+
+    // Filtrar votos cuando cambien las parroquias seleccionadas
+    useEffect(() => {
+        if (votosOriginales.length > 0) {
+            console.log('🔍 Filtro Debug:', {
+                selectedParroquias: selectedParroquias,
+                selectedCount: selectedParroquias?.length || 0,
+                totalVotosOriginales: votosOriginales.length
+            });
+
+            // Verificar si es filtro vacío (no mostrar nada)
+            if (selectedParroquias && selectedParroquias.length === 1 && selectedParroquias[0] === 'FILTRO_VACIO') {
+                console.log('🚫 Filtro vacío - NO mostrando votos');
+                setVotos([]);
+            } else if (!selectedParroquias || selectedParroquias.length === 0) {
+                // Array vacío = sin filtro → mostrar todos
+                console.log('✅ Mostrando TODOS los votos (sin filtro)');
+                setVotos(votosOriginales);
+            } else {
+                // Filtrar solo votos de las parroquias seleccionadas
+                const votosFiltrados = votosOriginales.filter(voto => {
+                    const incluido = selectedParroquias.includes(voto.parroquiaIdSvg);
+                    if (incluido) {
+                        console.log(`✅ Voto incluido: ${voto.parroquiaNombre} (${voto.parroquiaIdSvg})`);
+                    }
+                    return incluido;
+                });
+                console.log(`🎯 Filtrados: ${votosFiltrados.length} de ${votosOriginales.length} votos`);
+                setVotos(votosFiltrados);
+            }
+        }
+    }, [selectedParroquias, votosOriginales]);
 
     // Calcular total de votos por registro (suma de todos los candidatos)
     const calcularTotalVotos = (voto) => {

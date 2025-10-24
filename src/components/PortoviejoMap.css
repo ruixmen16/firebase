@@ -55,12 +55,19 @@
 .parish-path {
     transition: all 0.3s ease;
     stroke-width: 2;
+    outline: none;
+    /* Eliminar borde negro al hacer clic/focus */
 }
 
 .parish-path:hover {
     stroke: #007bff;
     stroke-width: 3;
     filter: brightness(1.1);
+}
+
+.parish-path:focus {
+    outline: none;
+    /* Asegurar que no hay outline en focus */
 }
 
 .map-legend {

@@ -1,0 +1,31 @@
+[
+  {
+    "genero": "M",
+    "userId": "U73fz9Q4JKWcL735gjrW7aNsE7v2",
+    "parroquiaNombre": "PICOAZA",
+    "votos": [
+      {
+        "candidatoNombre": "Pincay",
+        "candidatoId": 1,
+        "numeroVotos": 1
+      },
+      {
+        "candidatoNombre": "Dennys",
+        "candidatoId": 2,
+        "numeroVotos": 1
+      },
+      {
+        "candidatoNombre": "Rafael",
+        "candidatoId": 3,
+        "numeroVotos": 1
+      }
+    ],
+    "circunscripcionCodigo": 1,
+    "parroquiaIdSvg": "jqvmap12_5845",
+    "imageUrls": [],
+    "junta": "2",
+    "timestamp": "2025-10-24 00:40:42.947000+00:00",
+    "parroquiaId": "ZXHRdL7blfwnlDrTYnY9",
+    "id": "mKCxhxqD1FB1XCBXsCbn"
+  }
+]
