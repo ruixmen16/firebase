@@ -79,11 +79,11 @@ const ActasPorZona = ({ zonaCodigo, zonaNombre, parroquiaIdSvg, parroquiaId, onA
                     <Card.Body className="p-3">
                         <Row className="g-2 mb-3">
                             <Col xs={3} className="text-center">
-                                <div className="fw-bold text-primary">{estadisticasZona.totalVotos.toLocaleString()}</div>
+                                <div className="fw-bold text-primary">{(estadisticasZona?.totalVotos || 0).toLocaleString()}</div>
                                 <small className="text-muted">Total Votos</small>
                             </Col>
                             <Col xs={3} className="text-center">
-                                <div className="fw-bold text-warning">{estadisticasZona.totalSufragantes.toLocaleString()}</div>
+                                <div className="fw-bold text-warning">{(estadisticasZona?.totalSufragantes || 0).toLocaleString()}</div>
                                 <small className="text-muted">Sufragantes</small>
                             </Col>
                             <Col xs={3} className="text-center">
@@ -106,11 +106,11 @@ const ActasPorZona = ({ zonaCodigo, zonaNombre, parroquiaIdSvg, parroquiaId, onA
                                                 {candidato.nombre}
                                             </div>
                                             <div className="text-primary fw-bold">
-                                                {candidato.totalVotos.toLocaleString()}
+                                                {(candidato?.totalVotos || 0).toLocaleString()}
                                             </div>
                                             <small className="text-muted">
-                                                {estadisticasZona.totalVotos > 0 ?
-                                                    Math.round((candidato.totalVotos / estadisticasZona.totalVotos) * 100) : 0}%
+                                                {(estadisticasZona?.totalVotos || 0) > 0 ?
+                                                    Math.round(((candidato?.totalVotos || 0) / estadisticasZona.totalVotos) * 100) : 0}%
                                             </small>
                                         </div>
                                     </Col>
@@ -157,7 +157,7 @@ const ActasPorZona = ({ zonaCodigo, zonaNombre, parroquiaIdSvg, parroquiaId, onA
                                         </td>
                                         <td>
                                             <span className="fw-bold text-primary">
-                                                {acta.totalVotos.toLocaleString()}
+                                                {(acta?.totalVotos || 0).toLocaleString()}
                                             </span>
                                         </td>
                                         <td>{(acta.totalSufragantes || 0).toLocaleString()}</td>

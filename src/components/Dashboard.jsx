@@ -47,17 +47,17 @@ const Dashboard = ({ user }) => {
     } = useDashboard(user, selectedParroquias);
 
     // Usar estadísticas optimizadas
-    const estadisticas = candidatosOptimizados;
-    const totalVotosGeneral = estadisticasOptimizadas ?
-        (estadisticasOptimizadas.totalVotosValidos || 0) : 0;
+    const estadisticas = (candidatosOptimizados && Array.isArray(candidatosOptimizados)) ? candidatosOptimizados : [];
+    const totalVotosGeneral = (estadisticasOptimizadas && typeof estadisticasOptimizadas === 'object') ?
+        Number(estadisticasOptimizadas.totalVotosValidos) || 0 : 0;
 
     // Usar estadísticas optimizadas (precalculadas) en lugar de calcularlas manualmente
-    const estadisticasAdicionales = estadisticasOptimizadas ? {
-        totalSufragantes: estadisticasOptimizadas.totalSufragantes || 0,
-        actasValidadas: estadisticasOptimizadas.totalActasRevisadas || 0,
-        actasSinValidar: estadisticasOptimizadas.totalActasNoRevisadas || 0,
-        totalActas: estadisticasOptimizadas.totalActas || 0,
-        porcentajeRevision: estadisticasOptimizadas.porcentajeRevision || 0
+    const estadisticasAdicionales = (estadisticasOptimizadas && typeof estadisticasOptimizadas === 'object') ? {
+        totalSufragantes: Number(estadisticasOptimizadas.totalSufragantes) || 0,
+        actasValidadas: Number(estadisticasOptimizadas.totalActasRevisadas) || 0,
+        actasSinValidar: Number(estadisticasOptimizadas.totalActasNoRevisadas) || 0,
+        totalActas: Number(estadisticasOptimizadas.totalActas) || 0,
+        porcentajeRevision: Number(estadisticasOptimizadas.porcentajeRevision) || 0
     } : {
         totalSufragantes: 0,
         actasValidadas: 0,
@@ -231,29 +231,29 @@ const Dashboard = ({ user }) => {
                                 </div>
                                 <div className="row g-2 mb-2">
                                     <div className="col-4 text-center">
-                                        <div className="fw-bold text-primary">{totalVotosGeneral.toLocaleString()}</div>
+                                        <div className="fw-bold text-primary">{(totalVotosGeneral || 0).toLocaleString()}</div>
                                         <small className="text-muted">Total Votos</small>
                                     </div>
                                     <div className="col-4 text-center">
-                                        <div className="fw-bold text-warning">{estadisticasAdicionales.totalSufragantes.toLocaleString()}</div>
+                                        <div className="fw-bold text-warning">{(estadisticasAdicionales?.totalSufragantes || 0).toLocaleString()}</div>
                                         <small className="text-muted">Sufragantes</small>
                                     </div>
                                     <div className="col-4 text-center">
-                                        <div className="fw-bold text-info">{estadisticasAdicionales.totalActas}</div>
+                                        <div className="fw-bold text-info">{estadisticasAdicionales?.totalActas || 0}</div>
                                         <small className="text-muted">Actas</small>
                                     </div>
                                 </div>
                                 <div className="row g-2">
                                     <div className="col-6 text-center">
-                                        <div className="fw-bold text-success">{estadisticasAdicionales.actasValidadas}</div>
+                                        <div className="fw-bold text-success">{estadisticasAdicionales?.actasValidadas || 0}</div>
                                         <small className="text-muted">
-                                            Validadas ({estadisticasAdicionales.porcentajeRevision}%)
+                                            Validadas ({estadisticasAdicionales?.porcentajeRevision || 0}%)
                                         </small>
                                     </div>
                                     <div className="col-6 text-center">
-                                        <div className="fw-bold text-danger">{estadisticasAdicionales.actasSinValidar}</div>
+                                        <div className="fw-bold text-danger">{estadisticasAdicionales?.actasSinValidar || 0}</div>
                                         <small className="text-muted">
-                                            Sin Validar ({estadisticasAdicionales.totalActas > 0 ? Math.round((estadisticasAdicionales.actasSinValidar / estadisticasAdicionales.totalActas) * 100) : 0}%)
+                                            Sin Validar ({(estadisticasAdicionales?.totalActas || 0) > 0 ? Math.round(((estadisticasAdicionales?.actasSinValidar || 0) / estadisticasAdicionales.totalActas) * 100) : 0}%)
                                         </small>
                                     </div>
                                 </div>
@@ -262,12 +262,12 @@ const Dashboard = ({ user }) => {
                             {/* Lista de Candidatos - SCROLLEABLE */}
                             <div className="flex-grow-1 overflow-auto"
                                 style={{ minHeight: 0 }}>
-                                {estadisticas
-                                    .filter(candidato => candidato.totalVotos > 0) // Mostrar solo candidatos con votos
-                                    .sort((a, b) => b.totalVotos - a.totalVotos) // Ordenar de mayor a menor por votos
+                                {(estadisticas || [])
+                                    .filter(candidato => candidato && candidato.totalVotos > 0) // Mostrar solo candidatos con votos
+                                    .sort((a, b) => (b.totalVotos || 0) - (a.totalVotos || 0)) // Ordenar de mayor a menor por votos
                                     .map((candidato, index) => {
                                         const porcentaje = totalVotosGeneral > 0 ?
-                                            Math.round((candidato.totalVotos / totalVotosGeneral) * 100) : 0;
+                                            Math.round(((candidato?.totalVotos || 0) / totalVotosGeneral) * 100) : 0;
 
                                         // Colores para las barras de progreso - el primer lugar tendrá color dorado/success
                                         const colores = ['success', 'primary', 'info', 'warning', 'danger', 'secondary', 'dark', 'primary'];
@@ -287,7 +287,7 @@ const Dashboard = ({ user }) => {
                                                                 {candidato.nombre}
                                                             </h6>
                                                             <small className="text-muted" style={{ fontSize: '0.75rem' }}>
-                                                                {candidato.totalVotos.toLocaleString()} votos
+                                                                {(candidato?.totalVotos || 0).toLocaleString()} votos
                                                             </small>
                                                         </div>
                                                     </div>
@@ -310,7 +310,7 @@ const Dashboard = ({ user }) => {
                                     })}
 
                                 {/* Mensaje cuando no hay candidatos con votos */}
-                                {estadisticas.filter(candidato => candidato.totalVotos > 0).length === 0 && (
+                                {(estadisticas || []).filter(candidato => candidato && candidato.totalVotos > 0).length === 0 && (
                                     <div className="text-center py-4">
                                         <div className="text-muted">
                                             <h6>📊 Sin resultados aún</h6>
