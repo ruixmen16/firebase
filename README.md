@@ -1,14 +1,15 @@
-# 🗳️ Sistema Electoral Firebase
+# 🗳️ Sistema de Conteo de Votos Firebase
 
-Una aplicación web moderna para votación y chat en tiempo real, construida con React, Firebase y React Bootstrap.
+Aplicación web orientada al seguimiento, revisión y visualización de resultados electorales, construida con React, Firebase y React Bootstrap.
 
-## 🚀 Características
+## 🚀 Características principales
 
-- **Autenticación con Google**: Login seguro usando Firebase Auth
-- **Chat en Tiempo Real**: Mensajería con soporte para imágenes
-- **Sistema de Votación**: Dashboard electoral con resultados en vivo
-- **Diseño Responsive**: Interface optimizada para todos los dispositivos
-- **Arquitectura Escalable**: Separación clara de responsabilidades
+- **Autenticación con Google**: acceso seguro para usuarios autorizados.
+- **Dashboard electoral**: visualización de resultados generales y por candidato.
+- **Conteo de votos**: seguimiento de votos por mesa, parroquia y circunscripción.
+- **Revisión de actas**: validación de actas y estados de revisión.
+- **Mapa interactivo**: filtros por zona para analizar resultados en una vista geográfica.
+- **Diseño responsive**: interfaz funcional en escritorio y dispositivos móviles.
 
 ## 🛠️ Tecnologías
 
@@ -17,57 +18,60 @@ Una aplicación web moderna para votación y chat en tiempo real, construida con
 - **Backend**: Firebase (Auth, Firestore, Storage)
 - **Hosting**: Firebase Hosting
 
-## 📁 Estructura del Proyecto
+## 📁 Estructura del proyecto
 
 ```
 src/
-├── components/           # Componentes React reutilizables
-│   ├── ChatComponent.jsx    # Componente de chat
-│   ├── Dashboard.jsx        # Dashboard electoral
-│   ├── Header.jsx           # Encabezado con navegación
-│   ├── LoginForm.jsx        # Formulario de login
-│   ├── NavigationBar.jsx    # Barra de navegación
-│   ├── TabNavigation.jsx    # Navegación por pestañas
-│   ├── ErrorBoundary.jsx    # Manejo de errores
-│   ├── LoadingSpinner.jsx   # Indicador de carga
-│   └── index.js             # Barrel exports
-├── hooks/                # Custom hooks para lógica de negocio
-│   ├── useAuth.js           # Hook de autenticación
-│   ├── useChat.js           # Hook para funcionalidad de chat
-│   ├── useDashboard.js      # Hook para dashboard electoral
-│   └── index.js             # Barrel exports
-├── App.jsx              # Componente principal
-├── App.css              # Estilos base
-├── firebase-config.js   # Configuración de Firebase
-└── main.jsx            # Punto de entrada
+├── components/                # Componentes React reutilizables
+│   ├── Dashboard.jsx         # Panel principal de resultados electorales
+│   ├── PortoviejoMap.jsx     # Mapa interactivo con filtros por zona
+│   ├── ActasPorZona.jsx      # Vista de actas agrupadas por zona
+│   ├── Header.jsx            # Encabezado con navegación
+│   ├── LoginForm.jsx         # Formulario de acceso
+│   ├── NavigationBar.jsx     # Barra de navegación
+│   ├── ErrorBoundary.jsx     # Manejo de errores
+│   ├── LoadingSpinner.jsx    # Indicador de carga
+│   └── index.js              # Barrel exports
+├── hooks/                     # Lógica reutilizable para estadísticas y votos
+│   ├── useDashboard.js       # Gestión de votos y detalle de actas
+│   ├── useEstadisticasOptimizadas.js
+│   ├── useEstadisticasPorZona.js
+│   ├── useEstadisticasSelects.js
+│   └── index.js
+├── App.jsx                   # Componente principal
+├── App.css                   # Estilos base
+├── firebase-config.js        # Configuración de Firebase
+└── main.jsx                  # Punto de entrada
 ```
 
-## 🎯 Mejores Prácticas Implementadas
+## 📊 Funcionalidades del sistema
 
-### ✅ Arquitectura y Organización
-- **Separación de responsabilidades**: Componentes, hooks y configuración separados
-- **Custom hooks**: Lógica de negocio extraída en hooks reutilizables
-- **Barrel exports**: Imports limpios usando archivos index.js
-- **Estructura de carpetas clara**: Organización lógica del código
+### Autenticación
+- Login con Google
+- Persistencia de sesión
+- Logout con limpieza de datos
 
-### ✅ Rendimiento
-- **React.memo**: Optimización de renderizado en componentes puros
-- **Custom hooks**: Evitar re-renders innecesarios
-- **Lazy loading**: Componentes cargados según necesidad
+### Conteo y seguimiento de votos
+- Visualización de votos por candidato
+- Total de votos válidos y generales
+- Seguimiento por parroquia y circunscripción
+- Revisión y edición de actas registradas
+- Control de actas validadas y sin validar
 
-### ✅ Experiencia de Usuario
-- **Error boundaries**: Manejo elegante de errores
-- **Loading states**: Indicadores de carga consistentes
-- **Responsive design**: Funciona en todos los dispositivos
-- **Feedback visual**: Estados de carga y confirmaciones
+### Dashboard electoral
+- Resultados en tiempo real desde Firebase
+- Estadísticas dinámicas por zona
+- Indicadores de avance de revisión
+- Detalle de actas con votos por candidato
 
-### ✅ Mantenibilidad
-- **Código modular**: Fácil de mantener y extender
-- **Tipado implícito**: Código más robusto
-- **Comentarios descriptivos**: Código autodocumentado
-- **Convenciones consistentes**: Nomenclatura y estructura uniforme
+## 🎨 Diseño
 
-## 🔧 Comandos Disponibles
+- **Bootstrap 5**: framework CSS moderno
+- **React Bootstrap**: componentes React nativos
+- **Diseño limpio**: interfaz intuitiva y profesional
+- **Consistencia visual**: colores y tipografía coherentes
+
+## 🔧 Comandos disponibles
 
 ```bash
 # Instalar dependencias
@@ -81,71 +85,39 @@ npm run build
 
 # Vista previa de producción
 npm run preview
-
-# Desplegar a Firebase
-npm run deploy
 ```
 
 ## 🏗️ Configuración de Firebase
 
-1. Crear proyecto en [Firebase Console](https://console.firebase.google.com/)
-2. Habilitar Authentication (Google provider)
-3. Crear base de datos Firestore
-4. Habilitar Storage (opcional, para imágenes)
+1. Crear un proyecto en [Firebase Console](https://console.firebase.google.com/)
+2. Habilitar Authentication con Google
+3. Crear una base de datos Firestore
+4. Habilitar Storage si se requieren imágenes de actas
 5. Configurar las variables en `firebase-config.js`
 
-## 📊 Funcionalidades
+## 🚀 Próximas mejoras
 
-### Autenticación
-- Login con Google
-- Persistencia de sesión
-- Logout con limpieza de datos
+- [ ] Implementar exportación de resultados en PDF/Excel
+- [ ] Agregar más métricas de participación y escrutinio
+- [ ] Mejorar la auditoría de cambios en actas
+- [ ] Implementar notificaciones de revisión pendiente
+- [ ] Agregar pruebas automatizadas
 
-### Chat
-- Mensajes en tiempo real
-- Soporte para imágenes
-- Información del usuario (foto, nombre)
-- Límite de caracteres
-- Ordenamiento cronológico
+## 📝 Notas de desarrollo
 
-### Dashboard Electoral
-- Votación en tiempo real
-- Estadísticas dinámicas
-- Prevención de voto doble
-- Visualización con gráficos
-- Resultados porcentuales
-
-## 🎨 Diseño
-
-- **Bootstrap 5**: Framework CSS moderno
-- **React Bootstrap**: Componentes React nativos
-- **Diseño limpio**: Interface intuitiva y profesional
-- **Consistencia visual**: Colores y tipografía coherente
-
-## 🚀 Próximas Mejoras
-
-- [ ] Implementar TypeScript
-- [ ] Agregar tests unitarios
-- [ ] Optimizar imágenes automáticamente
-- [ ] Implementar notificaciones push
-- [ ] Agregar más estadísticas al dashboard
-- [ ] Implementar modo offline
-
-## 📝 Notas de Desarrollo
-
-Este proyecto sigue las mejores prácticas de React y Firebase:
+Este proyecto está enfocado en la administración y seguimiento electoral:
 - Hooks personalizados para reutilización de lógica
 - Manejo robusto de estados y errores
 - Arquitectura escalable y mantenible
-- Optimización de rendimiento con React.memo
-- Error boundaries para experiencia de usuario consistente
+- Optimización de rendimiento para consultas de estadísticas
+- Vistas orientadas al conteo, control y revisión de votos
 
 ## 🤝 Contribuir
 
-1. Fork el proyecto
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
+1. Crear una rama para la mejora (`git checkout -b feature/mejora-electoral`)
+2. Realizar los cambios
+3. Commit (`git commit -m 'Agregar mejora electoral'`)
+4. Push a la rama
 5. Abrir un Pull Request
 
 ## 📄 Licencia
